@@ -2,6 +2,7 @@
 import Card from "astro-theme-university/components/Card.astro";
 import CardGrid from "astro-theme-university/components/CardGrid.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import MyceliumMap from "../components/MyceliumMap.astro";
 import Stamp from "../components/Stamp.astro";
 import { courseMeta } from "../course-config";
 import { sessionLabels, siteConfig } from "../site-config";
@@ -21,6 +22,13 @@ import "../styles/dossier.css";
   <ul class="course-tags" aria-label="Course tags">
     {courseMeta.tags.map((tag) => <li>{tag}</li>)}
   </ul>
+
+  <p class="map-intro">
+    Twelve weeks, one organism. Follow the trunk from Week 1 to the Peace
+    Conference, or jump straight to a week's fruiting body below.
+  </p>
+
+  <MyceliumMap />
 
   <h2>What you will do</h2>
   <p>
@@ -72,5 +80,11 @@ import "../styles/dossier.css";
     color: var(--at-text-secondary);
     background: var(--at-bg-alt);
     font-size: 0.9rem;
+  }
+
+  .map-intro {
+    color: var(--at-text-secondary);
+    font-size: var(--at-font-size-sm);
+    max-width: 34rem;
   }
 </style>
