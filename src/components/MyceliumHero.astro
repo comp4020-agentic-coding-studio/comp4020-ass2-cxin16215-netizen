@@ -197,23 +197,42 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   // top and hides the SVGs, and if it never manages to (no WebGL2, an
   // exception while building the scene, a slow network), nothing here has to
   // know or care — the CSS this loop drives was never turned off.
+  // Scroll writes exactly one value — `rawProgress` — and nothing else.
+  // Every visual channel (camera pose, scene cross-fade opacity/scale) is
+  // instead chased toward that value once per rendered frame via a
+  // frame-rate-independent exponential filter (`damp`), so motion keeps
+  // flowing for as long as any channel hasn't caught up yet, rather than
+  // hard-freezing the instant scrolling stops — the root cause of the
+  // previous pass reading as "not smooth."
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   function clamp01(n: number) {
     return Math.min(1, Math.max(0, n));
   }
 
-  function smoothstep(edge0: number, edge1: number, x: number) {
+  // A quintic (C2-continuous) ease between two edges: zero velocity AND zero
+  // acceleration at edge0/edge1, unlike a cubic smoothstep (C1 — velocity
+  // hits zero but acceleration still jumps), which is what read as a kink at
+  // every scene-transition boundary and scroll extreme before.
+  function quinticStep(edge0: number, edge1: number, x: number) {
     const t = clamp01((x - edge0) / (edge1 - edge0));
-    return t * t * (3 - 2 * t);
+    return t * t * t * (t * (t * 6 - 15) + 10);
   }
 
   function lerp(a: number, b: number, t: number) {
     return a + (b - a) * t;
   }
 
+  // After `halfLife` seconds, `current` has closed half the remaining
+  // distance to `target` — true regardless of how choppy the frame times
+  // leading up to it were, unlike a fixed per-frame lerp fraction.
+  function damp(current: number, target: number, halfLife: number, dt: number) {
+    return target + (current - target) * Math.pow(2, -dt / halfLife);
+  }
+
   interface SceneWeights {
     progress: number;
+    lookProgress: number;
     forestW: number;
     hyphaeW: number;
   }
@@ -226,50 +245,126 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     const wrap = document.querySelector<HTMLElement>(".myco-hero__stage-wrap");
     const stage = document.getElementById("myco-hero-stage");
     const canvas = document.getElementById("myco-hero-canvas") as HTMLCanvasElement | null;
-    let ticking = false;
     let webglScene: HeroWebglScene | null = null;
 
-    function update() {
-      ticking = false;
-      if (!wrap || !stage) return;
+    function rawProgressFromScroll() {
+      if (!wrap) return 0;
       const rect = wrap.getBoundingClientRect();
       const scrollable = rect.height - window.innerHeight;
-      const progress = scrollable > 0 ? clamp01(-rect.top / scrollable) : 0;
+      return scrollable > 0 ? clamp01(-rect.top / scrollable) : 0;
+    }
 
-      const forestW = 1 - smoothstep(0, 0.3, progress);
-      const capW = smoothstep(0.12, 0.32, progress) - smoothstep(0.55, 0.75, progress);
-      const hyphaeW = smoothstep(0.62, 0.88, progress);
+    // One half-life per channel: the look target trails the camera's own
+    // position on a visibly slower clock (like a real tracking shot's gaze
+    // lagging the dolly), and opacity/scale settle at their own rate rather
+    // than snapping through at the position channel's speed.
+    const H_PROGRESS = 0.15;
+    const H_LOOK = 0.25;
+    const H_OPACITY = 0.15;
+    const H_SCALE = 0.28;
+    const LOOK_LAG_CAP = 0.08;
+
+    // Initialised from the page's actual current scroll position, not 0 —
+    // a deep link or back-navigation landing mid-scroll must not produce a
+    // false ease-in from the top of the journey.
+    let rawProgress = rawProgressFromScroll();
+    let smoothedProgress = rawProgress;
+    let smoothedLookProgress = rawProgress;
+    let forestW = 1 - quinticStep(0, 0.3, rawProgress);
+    let capW = clamp01(quinticStep(0.12, 0.32, rawProgress) - quinticStep(0.55, 0.75, rawProgress));
+    let hyphaeW = quinticStep(0.62, 0.88, rawProgress);
+    let forestS = lerp(1, 1.6, 1 - forestW);
+    let capS =
+      rawProgress < 0.4
+        ? lerp(0.7, 1, quinticStep(0.12, 0.32, rawProgress))
+        : lerp(1, 1.5, quinticStep(0.55, 0.75, rawProgress));
+    let hyphaeS = lerp(0.75, 1.05, hyphaeW);
+    let contentO = 1 - quinticStep(0, 0.22, rawProgress);
+
+    function onScrollOrResize() {
+      // The only write in this handler: everything downstream is chased
+      // from the per-frame loop below, never from here directly.
+      rawProgress = rawProgressFromScroll();
+    }
+
+    let rafId = 0;
+    let lastT = performance.now();
+
+    function frame(now: number) {
+      rafId = requestAnimationFrame(frame);
+      const dt = Math.min((now - lastT) / 1000, 0.05); // clamp against tab-switch spikes
+      lastT = now;
+      if (!stage) return;
+
+      smoothedProgress = damp(smoothedProgress, rawProgress, H_PROGRESS, dt);
+      smoothedLookProgress = damp(smoothedLookProgress, smoothedProgress, H_LOOK, dt);
+      smoothedLookProgress = clamp01(
+        Math.max(smoothedProgress - LOOK_LAG_CAP, Math.min(smoothedProgress + LOOK_LAG_CAP, smoothedLookProgress)),
+      );
+
+      const forestWTarget = 1 - quinticStep(0, 0.3, smoothedProgress);
+      const capWTarget = clamp01(
+        quinticStep(0.12, 0.32, smoothedProgress) - quinticStep(0.55, 0.75, smoothedProgress),
+      );
+      const hyphaeWTarget = quinticStep(0.62, 0.88, smoothedProgress);
+      const forestSTarget = lerp(1, 1.6, 1 - forestWTarget);
+      const capSTarget =
+        smoothedProgress < 0.4
+          ? lerp(0.7, 1, quinticStep(0.12, 0.32, smoothedProgress))
+          : lerp(1, 1.5, quinticStep(0.55, 0.75, smoothedProgress));
+      const hyphaeSTarget = lerp(0.75, 1.05, hyphaeWTarget);
+      const contentOTarget = 1 - quinticStep(0, 0.22, smoothedProgress);
+
+      forestW = damp(forestW, forestWTarget, H_OPACITY, dt);
+      capW = damp(capW, capWTarget, H_OPACITY, dt);
+      hyphaeW = damp(hyphaeW, hyphaeWTarget, H_OPACITY, dt);
+      forestS = damp(forestS, forestSTarget, H_SCALE, dt);
+      capS = damp(capS, capSTarget, H_SCALE, dt);
+      hyphaeS = damp(hyphaeS, hyphaeSTarget, H_SCALE, dt);
+      contentO = damp(contentO, contentOTarget, H_OPACITY, dt);
 
       stage.style.setProperty("--o-forest", String(forestW));
-      stage.style.setProperty("--s-forest", String(lerp(1, 1.6, 1 - forestW)));
-      stage.style.setProperty("--o-cap", String(clamp01(capW)));
-      stage.style.setProperty(
-        "--s-cap",
-        String(progress < 0.4 ? lerp(0.7, 1, smoothstep(0.12, 0.32, progress)) : lerp(1, 1.5, smoothstep(0.55, 0.75, progress))),
-      );
+      stage.style.setProperty("--s-forest", String(forestS));
+      stage.style.setProperty("--o-cap", String(capW));
+      stage.style.setProperty("--s-cap", String(capS));
       stage.style.setProperty("--o-hyphae", String(hyphaeW));
-      stage.style.setProperty("--s-hyphae", String(lerp(0.75, 1.05, hyphaeW)));
-      stage.style.setProperty("--o-content", String(1 - smoothstep(0, 0.22, progress)));
+      stage.style.setProperty("--s-hyphae", String(hyphaeS));
+      stage.style.setProperty("--o-content", String(contentO));
 
-      webglScene?.setWeights({ progress, forestW, hyphaeW });
+      webglScene?.setWeights({
+        progress: quinticStep(0, 1, smoothedProgress),
+        lookProgress: quinticStep(0, 1, smoothedLookProgress),
+        forestW,
+        hyphaeW,
+      });
     }
 
-    function onScroll() {
-      if (!ticking) {
-        requestAnimationFrame(update);
-        ticking = true;
-      }
+    function startLoop() {
+      lastT = performance.now();
+      rafId = requestAnimationFrame(frame);
     }
 
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    function stopLoop() {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+    startLoop();
+
+    // A live OS toggle mid-session tears the loop down or spins it back up —
+    // no reload required to honour a changed motion preference.
+    reduceMotion.addEventListener("change", () => {
+      if (reduceMotion.matches) stopLoop();
+      else startLoop();
+    });
 
     // The WebGL upgrade is opt-in per browser, never a requirement: probe a
     // throwaway canvas for WebGL2 support before touching the real one (and
     // before paying for the `three` chunk at all), and swallow any failure
-    // from the scene build itself. Either way the CSS/SVG loop above already
-    // has this page covered.
+    // from the scene build itself. Either way the rAF loop above already has
+    // this page covered on its own.
     if (canvas && stage) {
       const probe = document.createElement("canvas");
       const gl2Supported = Boolean(probe.getContext("webgl2"));
@@ -278,7 +373,6 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
           .then((scene) => {
             webglScene = scene;
             stage.classList.add("is-webgl");
-            update();
           })
           .catch(() => {
             // Stay on the SVG/CSS fallback silently — it is a complete
@@ -517,32 +611,69 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     // hero cap, directly beneath it looking up into the gills, then pushed
     // up past them into the hyphae tangle — one continuous dolly rather than
     // the cross-fading flat layers the SVG version has to use instead.
+    //
+    // These used to be walked with two straight-line lerps (segment [0,1],
+    // segment [1,2], segment [2,3]), each individually eased — which put a
+    // visible kink in the camera's velocity *and* direction at every
+    // keyframe, because two different straight lines meeting at a point
+    // have no reason to share a tangent. A single Catmull-Rom spline through
+    // all four points removes that: the path itself is smooth at the
+    // keyframes, not just the timing of travel along it.
+    //
+    // Catmull-Rom needs a point before the first and after the last to
+    // define the tangent AT the first/last keyframe (an open curve otherwise
+    // has to guess). `padEndpoints` adds one phantom point on each end via
+    // linear extrapolation of the boundary segment, purely so those two real
+    // endpoints get a well-defined tangent — `paramToArcFraction` below then
+    // finds exactly where the real (non-phantom) span sits in arc length, so
+    // progress 0 and 1 still land precisely on kfPos[0] and kfPos[last].
     const kfPos = [new THREE.Vector3(0, 5, 14), new THREE.Vector3(2, 3.2, -10), new THREE.Vector3(0, 1.6, -16), new THREE.Vector3(0, 3.4, -16)];
     const kfLook = [new THREE.Vector3(0, 3, -10), new THREE.Vector3(0, 3, -16), new THREE.Vector3(0, 3, -16), new THREE.Vector3(0, 4.4, -16)];
-    const camPos = kfPos[0]!.clone();
-    const camLook = kfLook[0]!.clone();
 
-    function setWeights({ progress, forestW, hyphaeW }: SceneWeights) {
-      let segT: number;
-      let a: number;
-      let b: number;
-      if (progress <= 0.3) {
-        segT = smoothstep(0, 0.3, progress);
-        a = 0;
-        b = 1;
-      } else if (progress <= 0.6) {
-        segT = smoothstep(0.3, 0.6, progress);
-        a = 1;
-        b = 2;
-      } else {
-        segT = smoothstep(0.6, 1, progress);
-        a = 2;
-        b = 3;
-      }
-      camPos.lerpVectors(kfPos[a]!, kfPos[b]!, segT);
-      camLook.lerpVectors(kfLook[a]!, kfLook[b]!, segT);
-      camera.position.copy(camPos);
-      camera.lookAt(camLook);
+    function padEndpoints(pts: InstanceType<typeof THREE.Vector3>[]) {
+      const start = pts[0]!.clone().multiplyScalar(2).sub(pts[1]!);
+      const end = pts[pts.length - 1]!.clone().multiplyScalar(2).sub(pts[pts.length - 2]!);
+      return [start, ...pts, end];
+    }
+
+    // Arc-length fraction (0..1 over the WHOLE padded curve, phantom
+    // segments included) at parameter `t` — read off the curve's own cached
+    // length table. This is what lets `posU0`/`posU1` below pin exactly
+    // where the real first/last keyframe sit once the phantom segments'
+    // share of the total length is excluded from the 0..1 travel range.
+    function paramToArcFraction(curve: InstanceType<typeof THREE.CatmullRomCurve3>, t: number, divisions = 200) {
+      const lengths = curve.getLengths(divisions);
+      const total = lengths[lengths.length - 1]!;
+      const idx = clamp01(t) * divisions;
+      const i0 = Math.floor(idx);
+      const i1 = Math.min(divisions, i0 + 1);
+      const frac = idx - i0;
+      const len = lengths[i0]! + (lengths[i1]! - lengths[i0]!) * frac;
+      return total > 0 ? len / total : 0;
+    }
+
+    const posCurve = new THREE.CatmullRomCurve3(padEndpoints(kfPos), false, "centripetal");
+    const lookCurve = new THREE.CatmullRomCurve3(padEndpoints(kfLook), false, "centripetal");
+    // Warm both arc-length tables once, off the per-frame path.
+    posCurve.getLengths(200);
+    lookCurve.getLengths(200);
+    const posT0 = 1 / (kfPos.length + 1);
+    const posT1 = kfPos.length / (kfPos.length + 1);
+    const posU0 = paramToArcFraction(posCurve, posT0);
+    const posU1 = paramToArcFraction(posCurve, posT1);
+    const lookT0 = 1 / (kfLook.length + 1);
+    const lookT1 = kfLook.length / (kfLook.length + 1);
+    const lookU0 = paramToArcFraction(lookCurve, lookT0);
+    const lookU1 = paramToArcFraction(lookCurve, lookT1);
+
+    function setWeights({ progress, lookProgress, forestW, hyphaeW }: SceneWeights) {
+      // getPointAt (not getPoint) samples by arc length, not by raw
+      // parameter — required here since the four real keyframes are
+      // nowhere near evenly spaced (a short hop into the cap, then a long
+      // push into the hyphae), so equal parameter steps would otherwise
+      // speed through the short leg and crawl the long one.
+      camera.position.copy(posCurve.getPointAt(lerp(posU0, posU1, clamp01(progress))));
+      camera.lookAt(lookCurve.getPointAt(lerp(lookU0, lookU1, clamp01(lookProgress))));
 
       forestGroup.visible = forestW > 0.01;
       forestCapMat.opacity = forestW;
@@ -552,7 +683,7 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
       hyphaeMat.opacity = hyphaeW;
       particleMat.opacity = hyphaeW * 0.8;
     }
-    setWeights({ progress: 0, forestW: 1, hyphaeW: 0 });
+    setWeights({ progress: 0, lookProgress: 0, forestW: 1, hyphaeW: 0 });
 
     function render() {
       requestAnimationFrame(render);
