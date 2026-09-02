@@ -40,23 +40,21 @@ export const slopCourseMetaSchema = z
 
 // The single source of truth for the course record. The generated homepage,
 // navigation label and /api/index.json all read this object.
-// Replace every placeholder value, but keep the shape: the catalogue ingests
-// this API contract when the course is published.
 //
-// The code's last three digits were assigned to this repo when it was
-// provisioned, and no other course in the cohort has them. Change the first
-// digit to your course's level (and `level` to match); keep the other three.
-// STARTER_CONTENT: replace this course record, then remove this comment.
+// The code's last three digits (674) were assigned to this repo when it was
+// provisioned; only the level digit changed, from 1 to 6, to match a
+// postgraduate seminar this narrow.
 export const courseMeta = slopCourseMetaSchema.parse({
-  code: "SLOP1674",
-  title: "Course Title Goes Here",
+  code: "SLOP6674",
+  title: "Underground Diplomacy: Trade, Espionage and Betrayal in the Mycorrhizal Network",
   session: "Semester 1",
   year: 2027,
-  level: 1,
+  level: 6,
   startDate: "2027-02-22",
-  endDate: "2027-05-28",
+  endDate: "2027-05-17",
   description:
-    "One concise paragraph explaining what this course is, who it is for, " +
-    "and why somebody would choose to spend a semester taking it.",
-  tags: ["replace me"],
+    "A postgraduate seminar treating forest fungal networks as a diplomatic " +
+    "system: trade agreements, espionage, sanctions and betrayal beneath " +
+    "the soil.",
+  tags: ["mycology", "network theory", "diplomacy"],
 }) satisfies CourseMetaInput;
