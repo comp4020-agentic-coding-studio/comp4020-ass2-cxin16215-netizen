@@ -70,24 +70,49 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 const trunkPath = smoothPath(points);
 
 // Decorative-only offshoots between consecutive nodes: nothing they touch is
-// load-bearing information, so they carry no labels and no links.
-const branches = points.slice(0, -1).map((p, i) => {
+// load-bearing information, so they carry no labels and no links. Two or
+// three tendrils per gap (not one) so the trunk reads as a dense, fruiting
+// network rather than a single line with the occasional twig.
+const TENDRILS_PER_GAP = [2, 3];
+const branches = points.slice(0, -1).flatMap((p, i) => {
   const q = points[i + 1];
-  const mx = (p.x + q.x) / 2;
-  const my = (p.y + q.y) / 2;
-  const side = i % 2 === 0 ? 1 : -1;
-  const reach = 60 + ((i * 37) % 46);
-  const tipX = mx + side * reach;
-  const tipY = my - 16 + ((i * 19) % 22);
-  const cx = mx + side * reach * 0.55;
-  const cy = my - 8;
-  return { d: `M ${mx} ${my} Q ${cx} ${cy} ${tipX} ${tipY}`, tipX, tipY };
+  const count = TENDRILS_PER_GAP[i % TENDRILS_PER_GAP.length];
+  return Array.from({ length: count }, (_, j) => {
+    const t = (j + 1) / (count + 1);
+    const bx = p.x + (q.x - p.x) * t;
+    const by = p.y + (q.y - p.y) * t;
+    const side = (i + j) % 2 === 0 ? 1 : -1;
+    const reach = 46 + ((i * 37 + j * 29) % 52);
+    const tipX = bx + side * reach;
+    const tipY = by - 14 + ((i * 19 + j * 13) % 24);
+    const cx = bx + side * reach * 0.55;
+    const cy = by - 8;
+    return { d: `M ${bx} ${by} Q ${cx} ${cy} ${tipX} ${tipY}`, tipX, tipY };
+  });
 });
 
 const pulseCount = Math.min(nodes.length, 6);
+
+// Set dressing, not subject matter: real soil isn't only glowing fungal
+// thread — it's also inert crumbs of humus and the odd insect. Both are
+// dim, unlit and carry no glow filter at all, on purpose, so they read as
+// background matter the network grows through rather than another light
+// source competing with the trunk and pulses.
+const detritusSpecks = Array.from({ length: 14 }, (_, i) => {
+  const p = points[i % points.length];
+  const ox = ((i * 47) % 140) - 70;
+  const oy = (((i * 31) % 60) - 30) + 44;
+  return { x: p.x + ox, y: p.y + oy, r: 1 + ((i * 13) % 3) };
+});
+
+const ants = [0.32, 0.68].map((f, i) => {
+  const p = points[Math.min(points.length - 1, Math.floor((points.length - 1) * f))];
+  const flip = i === 1;
+  return { x: p.x + (flip ? 54 : -60), y: p.y + (flip ? -18 : 32), flip };
+});
 ---
 
-<div class="mycelium-map" style={`--map-height: ${HEIGHT}px`}>
+<div id="mycelium-map" class="mycelium-map" style={`--map-height: ${HEIGHT}px`}>
   <svg
     class="mycelium-map__art"
     viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
@@ -95,6 +120,10 @@ const pulseCount = Math.min(nodes.length, 6);
     aria-hidden="true"
     focusable="false"
   >
+    {/* A soft, blurred echo of the trunk's own path, much wider and almost
+        transparent — a diffuse root mass giving the crisp trunk above it
+        somewhere to sit, rather than floating on bare background. */}
+    <path d={trunkPath} class="mm-trunk-field" />
     {
       branches.map((branch) => (
         <>
@@ -118,6 +147,19 @@ const pulseCount = Math.min(nodes.length, 6);
             <mpath href="#mm-trunk" />
           </animateMotion>
         </circle>
+      ))
+    }
+    {
+      detritusSpecks.map((s) => <circle cx={s.x} cy={s.y} r={s.r} class="mm-detritus" />)
+    }
+    {
+      ants.map((a) => (
+        <g class="mm-ant" transform={`translate(${a.x} ${a.y}) scale(${a.flip ? -1 : 1}, 1)`}>
+          <ellipse cx="-4" cy="0" rx="2.4" ry="1.6" />
+          <ellipse cx="-0.6" cy="-0.3" rx="1.5" ry="1.2" />
+          <ellipse cx="2.6" cy="-0.5" rx="1.1" ry="1" />
+          <path d="M -6 -1.4 L -8 -3.2 M -6 0.6 L -8 2.6 M -1 1.4 L -2 3.6 M -1 -1.6 L -2 -3.8 M 1.8 1.2 L 1.4 3.4 M 1.8 -1.4 L 1.4 -3.6" />
+        </g>
       ))
     }
   </svg>
@@ -159,6 +201,28 @@ const pulseCount = Math.min(nodes.length, 6);
   });
   applyMotionPreference();
   reduceMotion.addEventListener("change", applyMotionPreference);
+
+  // Nodes fade and rise in as they cross into view, rather than all sitting
+  // fully drawn on page load — the map reveals itself as you descend into
+  // it, matching the rest of the homepage's "continuous descent" framing.
+  // Reduced motion gets every node visible immediately, no observer needed.
+  const nodeEls = document.querySelectorAll<HTMLLIElement>(".mm-node");
+  if (reduceMotion.matches) {
+    nodeEls.forEach((el) => el.classList.add("mm-node--visible"));
+  } else {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("mm-node--visible");
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.2 },
+    );
+    nodeEls.forEach((el) => observer.observe(el));
+  }
 </script>
 
 <style>
@@ -167,6 +231,7 @@ const pulseCount = Math.min(nodes.length, 6);
     width: 100%;
     height: var(--map-height);
     margin-block-end: var(--at-spacing-2xl);
+    scroll-margin-top: 5rem;
   }
 
   .mycelium-map__art {
@@ -183,6 +248,15 @@ const pulseCount = Math.min(nodes.length, 6);
      and shallow, not the primary defence. */
   .mycelium-map {
     overflow-x: clip;
+  }
+
+  .mm-trunk-field {
+    fill: none;
+    stroke: var(--myco-glow-2);
+    stroke-width: 46;
+    stroke-linecap: round;
+    opacity: 0.07;
+    filter: blur(22px);
   }
 
   .mm-trunk {
@@ -215,6 +289,21 @@ const pulseCount = Math.min(nodes.length, 6);
     filter: drop-shadow(0 0 6px var(--myco-glow)) drop-shadow(0 0 12px var(--myco-glow-soft));
   }
 
+  /* Inert soil matter: no glow filter, deliberately, so it never competes
+     with the network's own light for attention. */
+  .mm-detritus {
+    fill: var(--at-text-muted);
+    opacity: 0.22;
+  }
+
+  .mm-ant {
+    fill: var(--at-text-muted);
+    stroke: var(--at-text-muted);
+    stroke-width: 0.5;
+    stroke-linecap: round;
+    opacity: 0.4;
+  }
+
   @keyframes mm-trunk-breathe {
     0%, 100% { filter: drop-shadow(0 0 5px var(--myco-glow-soft)); }
     50% { filter: drop-shadow(0 0 11px var(--myco-glow)); }
@@ -234,6 +323,17 @@ const pulseCount = Math.min(nodes.length, 6);
     left: var(--nx);
     top: var(--ny);
     transform: translate(-50%, -50%);
+    translate: 0 1.25rem;
+    opacity: 0;
+    transition:
+      opacity 0.6s ease,
+      translate 0.6s ease;
+    transition-delay: calc(var(--ni, 0) * 45ms);
+  }
+
+  .mm-node--visible {
+    translate: 0 0;
+    opacity: 1;
   }
 
   .mm-node a {
@@ -244,7 +344,9 @@ const pulseCount = Math.min(nodes.length, 6);
     border-radius: 999px;
     background: var(--at-bg-elevated);
     border: 2px solid var(--at-border);
-    box-shadow: var(--at-shadow-sm);
+    box-shadow:
+      var(--at-shadow-sm),
+      0 0 16px -6px var(--myco-glow-soft);
     color: var(--at-text);
     text-decoration: none;
     max-width: min(58vw, 18rem);
@@ -258,7 +360,9 @@ const pulseCount = Math.min(nodes.length, 6);
   .mm-node a:focus-visible {
     transform: scale(1.05);
     border-color: var(--at-primary);
-    box-shadow: var(--at-shadow-lg);
+    box-shadow:
+      var(--at-shadow-lg),
+      0 0 24px -4px var(--myco-glow);
   }
 
   .mm-node__glyph {
@@ -267,7 +371,7 @@ const pulseCount = Math.min(nodes.length, 6);
     height: 2.25rem;
     color: var(--at-on-primary);
     border-radius: 999px;
-    background: var(--at-primary);
+    background: radial-gradient(circle at 32% 28%, var(--myco-glow-2), var(--myco-glow) 55%, var(--at-primary) 100%);
     padding: 0.3rem;
     box-sizing: border-box;
   }
@@ -313,6 +417,12 @@ const pulseCount = Math.min(nodes.length, 6);
   @media (prefers-reduced-motion: reduce) {
     .mm-node a {
       transition: none;
+    }
+
+    .mm-node {
+      transition: none;
+      opacity: 1;
+      translate: 0 0;
     }
 
     .mm-trunk {
