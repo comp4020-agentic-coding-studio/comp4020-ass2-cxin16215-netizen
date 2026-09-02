@@ -19,6 +19,14 @@ export const siteConfig = defineSiteConfig({
   ...slopBranding,
   name: "Slop University",
 
+  // Forced, not defaulted: the brief is "hits you immediately, no matter
+  // who opens it," and every --at-* token is already computed to pass
+  // contrast in dark mode. The trade-off, stated plainly: the footer's
+  // light/dark toggle only renders when colorScheme is "auto"
+  // (astro-theme-university's Footer.astro), so forcing dark removes
+  // visitor choice. Accepted deliberately — see PROCESS.md.
+  colorScheme: "dark",
+
   links: [
     { text: "Lectures", href: "/lectures/" },
     { text: sessionLabels.plural, href: "/sessions/" },
