@@ -1,20 +1,23 @@
 ---
 // The opening beat, restaged as one continuous camera move rather than a
-// single static image: a mushroom forest, pulled in tight to one cap's
-// gills, pulled in tighter again to the hyphae threading through them —
-// which then hand off directly into <MyceliumMap>, the actual "complete
+// single static image: a forest floor, pulled down through the wall of soil
+// at its edge, deeper still to the root hub the whole network answers to —
+// which then hands off directly into <MyceliumMap>, the actual "complete
 // underground world" the threads lead to. No image-generation or browser
 // tool exists in this environment, so every scene below is hand-authored
-// SVG line/shape art, not a photograph or a rendered illustration.
+// SVG line/shape art, not a photograph or a rendered illustration — and the
+// brief this redesign answers is specifically "mushroom and soil," so every
+// new shape (strata walls, tubers, root hairs, rocks, groundwater, burrowed
+// fauna) is drawn from that vocabulary rather than the glow duo alone.
 //
-// The three scenes are pinned in one sticky viewport-height stage while a
-// tall spacer (`--myco-hero-vh`) scrolls underneath it; a small script
-// turns scroll position inside that spacer into three 0..1 weights (one
-// per scene) and sets them as CSS custom properties the scenes read for
-// opacity and scale. Reduced motion drops the spacer to one viewport and
-// shows only the cap/gills scene, statically — the same single hero image
-// this component used to be, unchanged for anyone who has asked for less
-// motion.
+// The three scenes — Surface, Threshold, Undersoil — are pinned in one
+// sticky viewport-height stage while a tall spacer (`--myco-hero-vh`)
+// scrolls underneath it; a small script turns scroll position inside that
+// spacer into three 0..1 weights (one per scene) and sets them as CSS custom
+// properties the scenes read for opacity and scale. Reduced motion drops the
+// spacer to one viewport and shows only the Threshold scene, statically —
+// the same single hero image this component used to be, unchanged for
+// anyone who has asked for less motion.
 //
 // Layered on top of that (still SVG/CSS): a progressively-enhanced WebGL
 // pass. The SVG scenes above are not a stopgap — they are the real fallback,
@@ -40,131 +43,402 @@ interface Props {
 
 const { code, title, tagline, mapAnchorId } = Astro.props;
 
-// --- Scene A: forest, wide shot -------------------------------------------
-// Nine mushrooms in three depth bands (back/mid/front), painted back-to-
-// front, each dimmer and smaller the further back it sits — the classic
-// layered-silhouette depth cue, done with plain ellipses so it costs
-// nothing to hand-place.
-const GROUND_Y = 360;
-const mushrooms = Array.from({ length: 9 }, (_, i) => {
-  const depth = i % 3;
-  const scale = depth === 0 ? 0.5 : depth === 1 ? 0.78 : 1.15;
-  const x = 40 + i * 90 + (((i * 53) % 40) - 20);
-  const y = GROUND_Y - ((i * 29) % 18);
+// Deterministic pseudo-random-ish jitter: every shape below is placed with
+// this, never `Math.random()`, so a given build is always the same shape.
+function hash(i: number, k: number): number {
+  return ((i * k) % 97) / 97;
+}
+
+const SCENE_W = 700;
+
+// A wobbly horizontal line (soil surface, strata seam) built from
+// `segments` hashed control points, smoothed with quadratic-Bezier
+// midpoints so it reads as an uneven, organic boundary rather than a ruled
+// cut. Returns the points alongside the path data since one caller
+// (root-hair ticks) needs to hang perpendicular marks off those same points.
+function groundLine(width: number, amplitude: number, segments: number, seed: number) {
+  const step = width / segments;
+  const points = Array.from({ length: segments + 1 }, (_, i) => ({
+    x: i * step,
+    y: (hash(i + seed, 13) - 0.5) * amplitude,
+  }));
+  let d = `M ${points[0]!.x} ${points[0]!.y}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]!;
+    const cur = points[i]!;
+    const midX = (prev.x + cur.x) / 2;
+    const midY = (prev.y + cur.y) / 2 + (hash(i + seed, 29) - 0.5) * amplitude * 0.7;
+    d += ` Q ${midX} ${midY} ${cur.x} ${cur.y}`;
+  }
+  return { d, points };
+}
+
+// Shared verbatim between Surface and Threshold — the ground line the
+// camera crosses has to look like the same line on both sides of the cut.
+const groundLineArt = groundLine(SCENE_W, 16, 10, 0);
+const rootHairTicks = groundLineArt.points
+  .filter((_, i) => i % 2 === 1)
+  .map((p, j) => ({
+    x1: p.x,
+    y1: p.y,
+    x2: p.x + (hash(j, 19) - 0.5) * 5,
+    y2: p.y + 5 + hash(j, 31) * 6,
+  }));
+
+// A tangle of filaments entering from all four edges of a w×h frame,
+// crossing near the middle and forking once past it. Used both for the
+// matte root-hair layer and, composited four times through <use> at rising
+// blur/falling opacity, the glowing hyphae layer — in both Threshold and
+// Undersoil.
+function filamentField(count: number, w: number, h: number, seed: number) {
+  return Array.from({ length: count }, (_, i) => {
+    const k = i + seed;
+    const edge = k % 4;
+    const t = ((k * 41) % 100) / 100;
+    const alongW = t * w;
+    const alongH = t * h;
+    const [x1, y1] =
+      edge === 0 ? [alongW, -20] : edge === 1 ? [w + 20, alongH] : edge === 2 ? [alongW, h + 20] : [-20, alongH];
+    const cx = w / 2 + (((k * 37) % (w * 0.4)) - w * 0.2);
+    const cy = h / 2 + (((k * 53) % (h * 0.4)) - h * 0.2);
+    const x2 = w - x1 + (((k * 19) % 60) - 30);
+    const y2 = h - y1 + (((k * 23) % 60) - 30);
+    const fx = cx + (x2 - cx) * 0.6;
+    const fy = cy + (y2 - cy) * 0.6;
+    const bx = fx + (((k * 31) % 50) - 25);
+    const by = fy + (((k * 17) % 50) - 25);
+    return { d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2} M ${fx} ${fy} L ${bx} ${by}` };
+  });
+}
+
+// A fan of root tendrils radiating from one origin between two angles — the
+// tuber growths in Threshold's wall and Undersoil's central hub.
+function rootTendrils(count: number, originX: number, originY: number, spreadAngle0: number, spreadAngle1: number, seed: number) {
+  return Array.from({ length: count }, (_, i) => {
+    const k = i + seed;
+    const angle =
+      spreadAngle0 + (spreadAngle1 - spreadAngle0) * (i / Math.max(1, count - 1)) + (hash(k, 31) - 0.5) * 0.4;
+    const len = 60 + hash(k, 17) * 100;
+    const midLen = len * 0.55;
+    const wob = (hash(k, 29) - 0.5) * 36;
+    const mx = originX + Math.cos(angle) * midLen - Math.sin(angle) * wob;
+    const my = originY + Math.sin(angle) * midLen + Math.cos(angle) * wob;
+    const ex = originX + Math.cos(angle) * len;
+    const ey = originY + Math.sin(angle) * len;
+    return { d: `M ${originX} ${originY} Q ${mx} ${my} ${ex} ${ey}` };
+  });
+}
+
+// A closed, jittered blob outline — the tuber/groundwater shape language,
+// smoothed the same way groundLine is, just wrapped into a loop.
+function blobPath(cx: number, cy: number, rx: number, ry: number, points: number, seed: number) {
+  const pts = Array.from({ length: points }, (_, i) => {
+    const a = (i / points) * Math.PI * 2;
+    const jitter = 0.82 + hash(i + seed, 23) * 0.36;
+    return { x: cx + Math.cos(a) * rx * jitter, y: cy + Math.sin(a) * ry * jitter };
+  });
+  let d = `M ${pts[0]!.x} ${pts[0]!.y}`;
+  for (let i = 0; i < pts.length; i++) {
+    const p0 = pts[i]!;
+    const p1 = pts[(i + 1) % pts.length]!;
+    const mx = (p0.x + p1.x) / 2 + (hash(i + seed, 31) - 0.5) * 8;
+    const my = (p0.y + p1.y) / 2 + (hash(i + seed, 41) - 0.5) * 8;
+    d += ` Q ${mx} ${my} ${p1.x} ${p1.y}`;
+  }
+  return `${d} Z`;
+}
+
+// A jittered N-gon outline for rocks — same hashed-jitter idea as
+// blobPath, but a raw point list for a <polygon> rather than a smoothed
+// path, since a rock should read as faceted, not organic.
+function rockPoints(cx: number, cy: number, r: number, sides: number, seed: number) {
+  return Array.from({ length: sides }, (_, i) => {
+    const a = (i / sides) * Math.PI * 2;
+    const jitter = 0.65 + hash(i + seed, 19) * 0.55;
+    return `${(cx + Math.cos(a) * r * jitter).toFixed(1)},${(cy + Math.sin(a) * r * jitter).toFixed(1)}`;
+  }).join(" ");
+}
+
+// --- Scene: Surface --------------------------------------------------------
+// A forest floor at the soil line: mushrooms above, root hairs already
+// reaching down into the ground line below them — the "mushroom and soil"
+// handoff stated up front, before the camera ever descends.
+const SURFACE_H = 400;
+const SURFACE_GROUND_Y = 322;
+const surfaceMushrooms = Array.from({ length: 6 }, (_, i) => {
+  const scale = 0.9 + hash(i, 23) * 0.65;
   return {
-    x,
-    y,
-    capRx: 46 * scale,
-    capRy: 24 * scale,
-    stemW: 9 * scale,
-    stemH: 52 * scale,
-    depth,
+    x: 55 + i * 118 + (hash(i, 41) - 0.5) * 46,
+    y: SURFACE_GROUND_Y - hash(i, 17) * 22,
+    capRx: 50 * scale,
+    capRy: 27 * scale,
+    stemW: 11 * scale,
+    stemH: 74 * scale,
+    glow: (i * 3) % 2 === 0 ? "teal" : "violet",
   };
-}).sort((a, b) => a.depth - b.depth);
-
-// --- Scene B: one cap, seen from underneath -------------------------------
-// Concentric ridges plus sixteen radiating gills, most forking once near
-// the rim — the same "branch, don't just extend" logic MyceliumMap uses
-// for its trunk offshoots, applied radially. Composited four times through
-// <use> at rising blur/falling opacity to fake volumetric glow.
-const GILL_COUNT = 16;
-const gills = Array.from({ length: GILL_COUNT }, (_, i) => {
-  const angle = (i / GILL_COUNT) * Math.PI * 2 + (i % 2 === 0 ? 0.05 : -0.05);
-  const innerR = 92;
-  const outerR = 210 + ((i * 37) % 60);
-  const midR = (innerR + outerR) / 2 + ((i * 19) % 24);
-  const wobble = ((i * 53) % 40) - 20;
-  const x1 = 300 + Math.cos(angle) * innerR;
-  const y1 = 300 + Math.sin(angle) * innerR;
-  const xm = 300 + Math.cos(angle) * midR + Math.cos(angle + Math.PI / 2) * wobble * 0.3;
-  const ym = 300 + Math.sin(angle) * midR + Math.sin(angle + Math.PI / 2) * wobble * 0.3;
-  const x2 = 300 + Math.cos(angle) * outerR;
-  const y2 = 300 + Math.sin(angle) * outerR;
-  const forkAngle = angle + (i % 2 === 0 ? 0.5 : -0.5);
-  const forkR = outerR - 34;
-  const fx = 300 + Math.cos(forkAngle) * forkR;
-  const fy = 300 + Math.sin(forkAngle) * forkR;
-  return { d: `M ${x1} ${y1} Q ${xm} ${ym} ${x2} ${y2} M ${xm} ${ym} L ${fx} ${fy}` };
 });
+const surfaceFlecks = Array.from({ length: 4 }, (_, i) => ({
+  x: 90 + i * 150 + (hash(i, 31) - 0.5) * 60,
+  y: SURFACE_GROUND_Y + 14 + hash(i, 19) * 30,
+  r: 1.8 + hash(i, 11) * 2.2,
+}));
+const surfaceAnt = { x: 260, y: SURFACE_GROUND_Y + 20, flip: false };
 
-// --- Scene C: among the hyphae ---------------------------------------------
-// Fourteen filaments entering from all four edges of a tight 400x400 frame,
-// crossing near the middle and forking once past it — a close, immersive
-// tangle rather than a centred motif, so the zoom reads as "inside" the
-// structure rather than "looking at another icon."
-const filaments = Array.from({ length: 14 }, (_, i) => {
-  const edge = i % 4;
-  const t = ((i * 41) % 100) / 100;
-  const along = t * 400;
-  const [x1, y1] = edge === 0 ? [along, -20] : edge === 1 ? [420, along] : edge === 2 ? [along, 420] : [-20, along];
-  const cx = 200 + (((i * 37) % 160) - 80);
-  const cy = 200 + (((i * 53) % 160) - 80);
-  const x2 = 400 - x1 + (((i * 19) % 60) - 30);
-  const y2 = 400 - y1 + (((i * 23) % 60) - 30);
-  const fx = cx + (x2 - cx) * 0.6;
-  const fy = cy + (y2 - cy) * 0.6;
-  const bx = fx + (((i * 31) % 50) - 25);
-  const by = fy + (((i * 17) % 50) - 25);
-  return { d: `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2} M ${fx} ${fy} L ${bx} ${by}` };
-});
+// --- Scene: Threshold -------------------------------------------------------
+// The wall of soil itself, seen in cross-section: three strata bands, a
+// tuber pushing tendrils into the dirt, root hairs and glowing hyphae
+// threading between them, and the first burrowed fauna. This is where "soil"
+// stops being a colour under the mushrooms and becomes the whole frame.
+const THRESHOLD_H = 620;
+const strataBoundaryY1 = 190;
+const strataBoundaryY2 = 400;
+const strataLine1 = groundLine(SCENE_W, 12, 8, 11);
+const strataLine2 = groundLine(SCENE_W, 12, 8, 47);
+const tuberX = 350;
+const tuberY = 470;
+const tuberPath = blobPath(tuberX, tuberY, 46, 60, 9, 5);
+const tuberTendrils = rootTendrils(7, tuberX, tuberY - 30, -2.6, -0.5, 3);
+const thresholdGlowFilaments = filamentField(9, SCENE_W, THRESHOLD_H, 61);
+const thresholdRootHairs = filamentField(7, SCENE_W, THRESHOLD_H, 83);
+const burrows = [
+  { x: 90, y: 240, rx: 22, ry: 14, fauna: "worm" as const },
+  { x: 590, y: 340, rx: 20, ry: 13, fauna: "beetle" as const },
+];
+const moistureBeads = Array.from({ length: 3 }, (_, i) => ({
+  x: 150 + i * 190 + (hash(i, 29) - 0.5) * 50,
+  y: 260 + i * 60 + (hash(i, 37) - 0.5) * 40,
+  r: 5 + hash(i, 13) * 3,
+}));
+const thresholdForegroundFlecks = Array.from({ length: 4 }, (_, i) => ({
+  x: 60 + i * 190 + (hash(i, 43) - 0.5) * 40,
+  y: 560 + (hash(i, 17) - 0.5) * 24,
+  r: 1.4 + hash(i, 7) * 1.6,
+}));
+
+// --- Scene: Undersoil -------------------------------------------------------
+// The deepest point of the dive: bedrock, groundwater, and the hub tuber the
+// whole visible network answers to, tangled in root hairs and glowing
+// hyphae — the frame that hands off directly into <MyceliumMap> below.
+const UNDERSOIL_H = 620;
+const rocks = Array.from({ length: 4 }, (_, i) => ({
+  points: rockPoints(
+    120 + i * 160 + (hash(i, 31) - 0.5) * 60,
+    480 + (hash(i, 23) - 0.5) * 80,
+    34 + hash(i, 17) * 22,
+    6 + (i % 3),
+    i * 7 + 5,
+  ),
+}));
+const waterCx = 520;
+const waterCy = 200;
+const waterRx = 90;
+const waterRy = 46;
+const waterPath = blobPath(waterCx, waterCy, waterRx, waterRy, 10, 71);
+const waterArcPath = `M ${waterCx - waterRx * 0.7} ${waterCy - waterRy * 0.4} Q ${waterCx} ${waterCy - waterRy * 0.9} ${waterCx + waterRx * 0.7} ${waterCy - waterRy * 0.4}`;
+const hubX = 260;
+const hubY = 420;
+const hubPath = blobPath(hubX, hubY, 58, 66, 10, 91);
+const hubTendrils = rootTendrils(8, hubX, hubY, 0, Math.PI * 2 * 0.999, 13);
+const undersoilGlowFilaments = filamentField(14, SCENE_W, UNDERSOIL_H, 109);
+const undersoilRootHairs = filamentField(10, SCENE_W, UNDERSOIL_H, 137);
+const undersoilFlecks = Array.from({ length: 22 }, (_, i) => ({
+  x: hash(i, 53) * SCENE_W,
+  y: hash(i, 47) * UNDERSOIL_H,
+  r: 1 + hash(i, 11) * 1.8,
+}));
+const undersoilAnt = { x: 470, y: 540, flip: true };
+const undersoilGrub = { x: 180, y: 300 };
 ---
 
 <section class="myco-hero" aria-label={title}>
   <div class="myco-hero__stage-wrap">
     <div class="myco-hero__stage" id="myco-hero-stage">
       <svg
-        class="myco-hero__scene myco-hero__scene--forest"
-        viewBox="0 0 800 400"
+        class="myco-hero__scene myco-hero__scene--surface"
+        viewBox={`0 0 ${SCENE_W} ${SURFACE_H}`}
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
         focusable="false"
       >
-        <rect x="0" y={GROUND_Y + 6} width="800" height={400 - GROUND_Y - 6} class="myco-forest__ground" />
+        <rect x="0" y="0" width={SCENE_W} height={SURFACE_H} class="myco-surface__sky" />
+        <rect x="0" y={SURFACE_GROUND_Y} width={SCENE_W} height={SURFACE_H - SURFACE_GROUND_Y} class="myco-surface__soil" />
         {
-          mushrooms.map((m) => (
-            <g class={`myco-forest__mushroom myco-forest__mushroom--d${m.depth}`}>
-              <rect x={m.x - m.stemW / 2} y={m.y - m.stemH} width={m.stemW} height={m.stemH} rx={m.stemW / 2} />
-              <ellipse cx={m.x} cy={m.y - m.stemH} rx={m.capRx} ry={m.capRy} />
+          surfaceMushrooms.map((m) => (
+            <g class={`myco-surface__mushroom myco-surface__mushroom--${m.glow}`}>
+              <rect x={m.x - m.stemW / 2} y={m.y - m.stemH} width={m.stemW} height={m.stemH} rx={m.stemW / 2} class="myco-surface__stem" />
+              <ellipse cx={m.x} cy={m.y - m.stemH} rx={m.capRx} ry={m.capRy} class="myco-surface__cap" />
             </g>
           ))
         }
+        <g transform={`translate(0 ${SURFACE_GROUND_Y})`}>
+          {
+            rootHairTicks.map((t) => (
+              <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class="myco-root-hair-tick" />
+            ))
+          }
+          <path d={groundLineArt.d} class="myco-ground-line" />
+        </g>
+        {
+          surfaceFlecks.map((f) => (
+            <use href="#myco-fauna-fleck" x={f.x - f.r} y={f.y - f.r} width={f.r * 2} height={f.r * 2} class="mm-detritus" />
+          ))
+        }
+        <g transform={`translate(${surfaceAnt.x} ${surfaceAnt.y}) scale(${surfaceAnt.flip ? -1 : 1}, 1)`}>
+          <use href="#myco-fauna-ant" x="-10" y="-5" width="20" height="10" class="mm-ant" />
+        </g>
       </svg>
 
       <svg
-        class="myco-hero__scene myco-hero__scene--cap"
-        viewBox="0 0 600 600"
+        class="myco-hero__scene myco-hero__scene--threshold"
+        viewBox={`0 0 ${SCENE_W} ${THRESHOLD_H}`}
+        preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
         focusable="false"
       >
         <defs>
-          <g id="myco-gill-art" fill="none" stroke="currentColor" stroke-linecap="round">
-            <circle cx="300" cy="300" r="40" stroke-width="1.4" opacity="0.9" />
-            <circle cx="300" cy="300" r="66" stroke-width="1.1" opacity="0.6" />
-            <circle cx="300" cy="300" r="92" stroke-width="1.6" opacity="0.75" />
-            <circle cx="300" cy="300" r="150" stroke-width="0.8" opacity="0.35" stroke-dasharray="1.5 7" />
-            {gills.map((g) => (
-              <path d={g.d} stroke-width="1.3" opacity="0.7" />
-            ))}
+          <radialGradient id="myco-moisture-grad">
+            <stop offset="0%" class="myco-moisture-grad__inner" />
+            <stop offset="100%" class="myco-moisture-grad__outer" />
+          </radialGradient>
+          <g id="myco-hyphae-art-threshold" fill="none" stroke="currentColor" stroke-linecap="round">
+            {
+              thresholdGlowFilaments.map((f) => (
+                <path d={f.d} stroke-width="1.5" opacity="0.75" />
+              ))
+            }
           </g>
         </defs>
-        <use href="#myco-gill-art" class="myco-cap__layer myco-cap__layer--3" />
-        <use href="#myco-gill-art" class="myco-cap__layer myco-cap__layer--2" />
-        <use href="#myco-gill-art" class="myco-cap__layer myco-cap__layer--1" />
-        <use href="#myco-gill-art" class="myco-cap__layer myco-cap__layer--core" />
+
+        <rect x="0" y="0" width={SCENE_W} height={strataBoundaryY1} class="myco-threshold__wall myco-threshold__wall--1" />
+        <rect x="0" y={strataBoundaryY1} width={SCENE_W} height={strataBoundaryY2 - strataBoundaryY1} class="myco-threshold__wall myco-threshold__wall--2" />
+        <rect x="0" y={strataBoundaryY2} width={SCENE_W} height={THRESHOLD_H - strataBoundaryY2} class="myco-threshold__wall myco-threshold__wall--3" />
+
+        <path d={groundLineArt.d} class="myco-ground-line" />
+        <g transform={`translate(0 ${strataBoundaryY1})`}>
+          <path d={strataLine1.d} class="myco-strata-seam" />
+        </g>
+        <g transform={`translate(0 ${strataBoundaryY2})`}>
+          <path d={strataLine2.d} class="myco-strata-seam" />
+        </g>
+
+        <g fill="none" stroke="currentColor" stroke-linecap="round" class="myco-root-hair">
+          {
+            thresholdRootHairs.map((f) => (
+              <path d={f.d} stroke-width="1.2" opacity="0.5" />
+            ))
+          }
+        </g>
+
+        <use href="#myco-hyphae-art-threshold" class="myco-hyphae-layer myco-hyphae-layer--3" />
+        <use href="#myco-hyphae-art-threshold" class="myco-hyphae-layer myco-hyphae-layer--2" />
+        <use href="#myco-hyphae-art-threshold" class="myco-hyphae-layer myco-hyphae-layer--1" />
+        <use href="#myco-hyphae-art-threshold" class="myco-hyphae-layer myco-hyphae-layer--core" />
+
+        <g class="myco-tuber">
+          {
+            tuberTendrils.map((t) => (
+              <g>
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--1" />
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--2" />
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--3" />
+              </g>
+            ))
+          }
+          <path d={tuberPath} class="myco-tuber__body" />
+        </g>
+
+        {
+          burrows.map((b) => (
+            <g>
+              <ellipse cx={b.x} cy={b.y} rx={b.rx} ry={b.ry} class="myco-burrow" />
+              {b.fauna === "worm" ? (
+                <use href="#myco-fauna-worm" x={b.x - 15} y={b.y - 5} width="30" height="10" class="mm-worm" />
+              ) : (
+                <use href="#myco-fauna-beetle" x={b.x - 11} y={b.y - 7} width="22" height="14" class="mm-beetle" />
+              )}
+            </g>
+          ))
+        }
+
+        {
+          moistureBeads.map((m) => (
+            <circle cx={m.x} cy={m.y} r={m.r} fill="url(#myco-moisture-grad)" />
+          ))
+        }
+
+        <g class="myco-threshold__fg-blur">
+          {
+            thresholdForegroundFlecks.map((f) => (
+              <use href="#myco-fauna-fleck" x={f.x - f.r} y={f.y - f.r} width={f.r * 2} height={f.r * 2} class="mm-detritus" />
+            ))
+          }
+        </g>
       </svg>
 
       <svg
-        class="myco-hero__scene myco-hero__scene--hyphae"
-        viewBox="0 0 400 400"
+        class="myco-hero__scene myco-hero__scene--undersoil"
+        viewBox={`0 0 ${SCENE_W} ${UNDERSOIL_H}`}
         preserveAspectRatio="xMidYMid slice"
         aria-hidden="true"
         focusable="false"
       >
-        <g fill="none" stroke="currentColor" stroke-linecap="round">
-          {filaments.map((f) => (
-            <path d={f.d} stroke-width="1.6" opacity="0.75" />
-          ))}
+        <defs>
+          <g id="myco-hyphae-art-undersoil" fill="none" stroke="currentColor" stroke-linecap="round">
+            {
+              undersoilGlowFilaments.map((f) => (
+                <path d={f.d} stroke-width="1.5" opacity="0.75" />
+              ))
+            }
+          </g>
+        </defs>
+
+        <rect x="0" y="0" width={SCENE_W} height={UNDERSOIL_H} class="myco-undersoil__bg" />
+
+        {
+          rocks.map((r) => (
+            <polygon points={r.points} class="myco-rock" />
+          ))
+        }
+
+        <path d={waterPath} class="myco-water-body" />
+        <path d={waterArcPath} class="myco-water-specular" />
+
+        <g fill="none" stroke="currentColor" stroke-linecap="round" class="myco-root-hair">
+          {
+            undersoilRootHairs.map((f) => (
+              <path d={f.d} stroke-width="1.2" opacity="0.5" />
+            ))
+          }
         </g>
+
+        <use href="#myco-hyphae-art-undersoil" class="myco-hyphae-layer myco-hyphae-layer--3" />
+        <use href="#myco-hyphae-art-undersoil" class="myco-hyphae-layer myco-hyphae-layer--2" />
+        <use href="#myco-hyphae-art-undersoil" class="myco-hyphae-layer myco-hyphae-layer--1" />
+        <use href="#myco-hyphae-art-undersoil" class="myco-hyphae-layer myco-hyphae-layer--core" />
+
+        <g class="myco-tuber myco-tuber--hub">
+          {
+            hubTendrils.map((t) => (
+              <g>
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--1" />
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--2" />
+                <path d={t.d} class="myco-root-tendril__layer myco-root-tendril__layer--3" />
+              </g>
+            ))
+          }
+          <path d={hubPath} class="myco-tuber__body" />
+        </g>
+
+        {
+          undersoilFlecks.map((f) => (
+            <use href="#myco-fauna-fleck" x={f.x - f.r} y={f.y - f.r} width={f.r * 2} height={f.r * 2} class="mm-detritus" />
+          ))
+        }
+
+        <g transform={`translate(${undersoilAnt.x} ${undersoilAnt.y}) scale(${undersoilAnt.flip ? -1 : 1}, 1)`}>
+          <use href="#myco-fauna-ant" x="-10" y="-5" width="20" height="10" class="mm-ant" />
+        </g>
+        <use href="#myco-fauna-grub" x={undersoilGrub.x - 8} y={undersoilGrub.y - 8} width="16" height="16" class="mm-grub" />
       </svg>
 
       <canvas id="myco-hero-canvas" class="myco-hero__canvas" aria-hidden="true"></canvas>
@@ -188,8 +462,8 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   // 0..1 weights, one per scene, plus a matching scale for each so a
   // fading scene visibly grows (the camera flying past it) while an
   // arriving scene visibly grows too (the camera arriving at it). Skipped
-  // entirely under reduced motion: the CSS fallback shows the cap scene
-  // statically and nothing here needs to run.
+  // entirely under reduced motion: the CSS fallback shows the Threshold
+  // scene statically and nothing here needs to run.
   //
   // The same weights also drive an optional WebGL upgrade (see initWebgl
   // below): the SVG/CSS path always runs first and is always correct on its
@@ -202,8 +476,7 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   // instead chased toward that value once per rendered frame via a
   // frame-rate-independent exponential filter (`damp`), so motion keeps
   // flowing for as long as any channel hasn't caught up yet, rather than
-  // hard-freezing the instant scrolling stops — the root cause of the
-  // previous pass reading as "not smooth."
+  // hard-freezing the instant scrolling stops.
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   function clamp01(n: number) {
@@ -233,8 +506,8 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   interface SceneWeights {
     progress: number;
     lookProgress: number;
-    forestW: number;
-    hyphaeW: number;
+    surfaceW: number;
+    undersoilW: number;
   }
 
   interface HeroWebglScene {
@@ -270,15 +543,15 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     let rawProgress = rawProgressFromScroll();
     let smoothedProgress = rawProgress;
     let smoothedLookProgress = rawProgress;
-    let forestW = 1 - quinticStep(0, 0.3, rawProgress);
-    let capW = clamp01(quinticStep(0.12, 0.32, rawProgress) - quinticStep(0.55, 0.75, rawProgress));
-    let hyphaeW = quinticStep(0.62, 0.88, rawProgress);
-    let forestS = lerp(1, 1.6, 1 - forestW);
-    let capS =
+    let surfaceW = 1 - quinticStep(0, 0.3, rawProgress);
+    let thresholdW = clamp01(quinticStep(0.12, 0.32, rawProgress) - quinticStep(0.55, 0.75, rawProgress));
+    let undersoilW = quinticStep(0.62, 0.88, rawProgress);
+    let surfaceS = lerp(1, 1.6, 1 - surfaceW);
+    let thresholdS =
       rawProgress < 0.4
         ? lerp(0.7, 1, quinticStep(0.12, 0.32, rawProgress))
         : lerp(1, 1.5, quinticStep(0.55, 0.75, rawProgress));
-    let hyphaeS = lerp(0.75, 1.05, hyphaeW);
+    let undersoilS = lerp(0.75, 1.05, undersoilW);
     let contentO = 1 - quinticStep(0, 0.22, rawProgress);
 
     function onScrollOrResize() {
@@ -302,40 +575,40 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
         Math.max(smoothedProgress - LOOK_LAG_CAP, Math.min(smoothedProgress + LOOK_LAG_CAP, smoothedLookProgress)),
       );
 
-      const forestWTarget = 1 - quinticStep(0, 0.3, smoothedProgress);
-      const capWTarget = clamp01(
+      const surfaceWTarget = 1 - quinticStep(0, 0.3, smoothedProgress);
+      const thresholdWTarget = clamp01(
         quinticStep(0.12, 0.32, smoothedProgress) - quinticStep(0.55, 0.75, smoothedProgress),
       );
-      const hyphaeWTarget = quinticStep(0.62, 0.88, smoothedProgress);
-      const forestSTarget = lerp(1, 1.6, 1 - forestWTarget);
-      const capSTarget =
+      const undersoilWTarget = quinticStep(0.62, 0.88, smoothedProgress);
+      const surfaceSTarget = lerp(1, 1.6, 1 - surfaceWTarget);
+      const thresholdSTarget =
         smoothedProgress < 0.4
           ? lerp(0.7, 1, quinticStep(0.12, 0.32, smoothedProgress))
           : lerp(1, 1.5, quinticStep(0.55, 0.75, smoothedProgress));
-      const hyphaeSTarget = lerp(0.75, 1.05, hyphaeWTarget);
+      const undersoilSTarget = lerp(0.75, 1.05, undersoilWTarget);
       const contentOTarget = 1 - quinticStep(0, 0.22, smoothedProgress);
 
-      forestW = damp(forestW, forestWTarget, H_OPACITY, dt);
-      capW = damp(capW, capWTarget, H_OPACITY, dt);
-      hyphaeW = damp(hyphaeW, hyphaeWTarget, H_OPACITY, dt);
-      forestS = damp(forestS, forestSTarget, H_SCALE, dt);
-      capS = damp(capS, capSTarget, H_SCALE, dt);
-      hyphaeS = damp(hyphaeS, hyphaeSTarget, H_SCALE, dt);
+      surfaceW = damp(surfaceW, surfaceWTarget, H_OPACITY, dt);
+      thresholdW = damp(thresholdW, thresholdWTarget, H_OPACITY, dt);
+      undersoilW = damp(undersoilW, undersoilWTarget, H_OPACITY, dt);
+      surfaceS = damp(surfaceS, surfaceSTarget, H_SCALE, dt);
+      thresholdS = damp(thresholdS, thresholdSTarget, H_SCALE, dt);
+      undersoilS = damp(undersoilS, undersoilSTarget, H_SCALE, dt);
       contentO = damp(contentO, contentOTarget, H_OPACITY, dt);
 
-      stage.style.setProperty("--o-forest", String(forestW));
-      stage.style.setProperty("--s-forest", String(forestS));
-      stage.style.setProperty("--o-cap", String(capW));
-      stage.style.setProperty("--s-cap", String(capS));
-      stage.style.setProperty("--o-hyphae", String(hyphaeW));
-      stage.style.setProperty("--s-hyphae", String(hyphaeS));
+      stage.style.setProperty("--o-surface", String(surfaceW));
+      stage.style.setProperty("--s-surface", String(surfaceS));
+      stage.style.setProperty("--o-threshold", String(thresholdW));
+      stage.style.setProperty("--s-threshold", String(thresholdS));
+      stage.style.setProperty("--o-undersoil", String(undersoilW));
+      stage.style.setProperty("--s-undersoil", String(undersoilS));
       stage.style.setProperty("--o-content", String(contentO));
 
       webglScene?.setWeights({
         progress: quinticStep(0, 1, smoothedProgress),
         lookProgress: quinticStep(0, 1, smoothedLookProgress),
-        forestW,
-        hyphaeW,
+        surfaceW,
+        undersoilW,
       });
     }
 
@@ -457,8 +730,8 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // --- Scene A: the forest, scattered around the one mushroom the camera
-    // is headed for. Fades out (forestW) as the camera commits to the dive.
+    // --- Surface: the forest, scattered around the one mushroom the camera
+    // is headed for. Fades out (surfaceW) as the camera commits to the dive.
     const forestGroup = new THREE.Group();
     const forestCapMat = new THREE.MeshStandardMaterial({
       color: GLOW_2,
@@ -484,9 +757,9 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     }
     scene.add(forestGroup);
 
-    // --- The hero mushroom: cap, stem and a radiating starburst of gill
-    // blades on its underside — the thing the camera passes under and
-    // looks straight up into around the midpoint of the scroll.
+    // --- Threshold: the hero mushroom — cap, stem and a radiating starburst
+    // of gill blades on its underside — the thing the camera passes under
+    // and looks straight up into around the midpoint of the scroll.
     const heroGroup = new THREE.Group();
     heroGroup.position.set(0, 0, -16);
     scene.add(heroGroup);
@@ -528,9 +801,9 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     }
     heroGroup.add(gillGroup);
 
-    // --- Scene C: the hyphae — a dense tangle of glowing tubes and drifting
-    // spore particles occupying the same space as the gills, faded in
-    // (hyphaeW) only once the camera has pushed up past them.
+    // --- Undersoil: a dense tangle of glowing tubes and drifting spore
+    // particles occupying the same space as the gills, faded in
+    // (undersoilW) only once the camera has pushed up past them.
     const hyphaeAnchor = new THREE.Vector3(0, 3, -16);
     const hyphaeGroup = new THREE.Group();
     const hyphaeMat = new THREE.MeshStandardMaterial({
@@ -666,7 +939,7 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     const lookU0 = paramToArcFraction(lookCurve, lookT0);
     const lookU1 = paramToArcFraction(lookCurve, lookT1);
 
-    function setWeights({ progress, lookProgress, forestW, hyphaeW }: SceneWeights) {
+    function setWeights({ progress, lookProgress, surfaceW, undersoilW }: SceneWeights) {
       // getPointAt (not getPoint) samples by arc length, not by raw
       // parameter — required here since the four real keyframes are
       // nowhere near evenly spaced (a short hop into the cap, then a long
@@ -675,15 +948,15 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
       camera.position.copy(posCurve.getPointAt(lerp(posU0, posU1, clamp01(progress))));
       camera.lookAt(lookCurve.getPointAt(lerp(lookU0, lookU1, clamp01(lookProgress))));
 
-      forestGroup.visible = forestW > 0.01;
-      forestCapMat.opacity = forestW;
-      forestStemMat.opacity = forestW;
+      forestGroup.visible = surfaceW > 0.01;
+      forestCapMat.opacity = surfaceW;
+      forestStemMat.opacity = surfaceW;
 
-      hyphaeGroup.visible = hyphaeW > 0.01;
-      hyphaeMat.opacity = hyphaeW;
-      particleMat.opacity = hyphaeW * 0.8;
+      hyphaeGroup.visible = undersoilW > 0.01;
+      hyphaeMat.opacity = undersoilW;
+      particleMat.opacity = undersoilW * 0.8;
     }
-    setWeights({ progress: 0, lookProgress: 0, forestW: 1, hyphaeW: 0 });
+    setWeights({ progress: 0, lookProgress: 0, surfaceW: 1, undersoilW: 0 });
 
     function render() {
       requestAnimationFrame(render);
@@ -743,7 +1016,7 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   }
 
   /* Belt and braces: even if a race let `.is-webgl` slip through, reduced
-     motion never shows the canvas — the static cap/gills SVG below is what
+     motion never shows the canvas — the static Threshold SVG below is what
      this component promises anyone who has asked for less motion. */
   @media (prefers-reduced-motion: reduce) {
     .myco-hero__canvas {
@@ -751,76 +1024,191 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     }
   }
 
-  /* Scene A: forest. Grows and fades as scroll progresses — the camera
-     appears to fly forward through it. */
-  .myco-hero__scene--forest {
-    opacity: var(--o-forest, 1);
-    transform: scale(var(--s-forest, 1));
-    color: var(--myco-glow);
+  /* Scene: Surface. Grows and fades as scroll progresses — the camera
+     appears to fly forward through the forest floor into the soil. */
+  .myco-hero__scene--surface {
+    opacity: var(--o-surface, 1);
+    transform: scale(var(--s-surface, 1));
   }
 
-  .myco-forest__ground {
-    fill: var(--myco-fog-2);
+  .myco-surface__sky {
+    fill: var(--at-bg);
   }
 
-  .myco-forest__mushroom {
-    fill: var(--myco-glow-2);
+  .myco-surface__soil {
+    fill: var(--myco-soil-1);
   }
 
-  .myco-forest__mushroom--d0 {
-    opacity: 0.32;
-    filter: blur(1.5px);
+  .myco-surface__stem {
+    fill: #14181f;
   }
 
-  .myco-forest__mushroom--d1 {
-    opacity: 0.55;
-    fill: var(--myco-glow);
-  }
-
-  .myco-forest__mushroom--d2 {
-    opacity: 0.9;
+  .myco-surface__mushroom--teal .myco-surface__cap {
     fill: var(--myco-glow);
     filter: drop-shadow(0 0 10px var(--myco-glow-soft));
   }
 
-  /* Scene B: the cap's underside. Rises in, grows past 40% progress the
-     same way the forest grows — the camera arriving, then flying through. */
-  .myco-hero__scene--cap {
-    opacity: var(--o-cap, 0);
-    transform: scale(var(--s-cap, 0.7));
+  .myco-surface__mushroom--violet .myco-surface__cap {
+    fill: var(--myco-glow-2);
+    filter: drop-shadow(0 0 10px var(--myco-glow-soft));
   }
 
-  .myco-hero__scene--cap {
+  .myco-ground-line {
+    fill: none;
+    stroke: var(--myco-root);
+    stroke-width: 2;
+    opacity: 0.55;
+  }
+
+  .myco-root-hair-tick {
+    stroke: var(--myco-root);
+    stroke-width: 1;
+    opacity: 0.4;
+  }
+
+  /* Scene: Threshold. Rises in, grows past 40% progress the same way
+     Surface grows — the camera arriving at the soil wall, then pushing
+     through it. This is also the one scene shown statically under reduced
+     motion. */
+  .myco-hero__scene--threshold {
+    opacity: var(--o-threshold, 0);
+    transform: scale(var(--s-threshold, 0.7));
     color: var(--myco-glow);
   }
 
-  .myco-cap__layer--3 {
+  .myco-threshold__wall--1 {
+    fill: var(--myco-soil-1);
+  }
+
+  .myco-threshold__wall--2 {
+    fill: var(--myco-soil-2);
+  }
+
+  .myco-threshold__wall--3 {
+    fill: var(--myco-soil-3);
+  }
+
+  .myco-strata-seam {
+    fill: none;
+    stroke: var(--myco-soil-fleck);
+    stroke-width: 1.5;
+    opacity: 0.4;
+  }
+
+  .myco-moisture-grad__inner {
+    stop-color: var(--myco-water);
+    stop-opacity: 0.9;
+  }
+
+  .myco-moisture-grad__outer {
+    stop-color: var(--myco-water);
+    stop-opacity: 0;
+  }
+
+  .myco-burrow {
+    fill: var(--myco-soil-3);
+    opacity: 0.7;
+  }
+
+  .myco-threshold__fg-blur {
+    filter: blur(2px);
+    opacity: 0.55;
+  }
+
+  /* Tuber growths — shared shape language between Threshold's wall tuber
+     and Undersoil's central hub. Three stacked, thinning strokes per
+     tendril fake a tapering root rather than a uniform line. */
+  .myco-root-tendril__layer {
+    fill: none;
+    stroke: var(--myco-root);
+    stroke-linecap: round;
+  }
+
+  .myco-root-tendril__layer--1 {
+    stroke-width: 5;
+    opacity: 0.18;
+  }
+
+  .myco-root-tendril__layer--2 {
+    stroke-width: 3;
+    opacity: 0.35;
+  }
+
+  .myco-root-tendril__layer--3 {
+    stroke-width: 1.4;
+    opacity: 0.6;
+  }
+
+  .myco-tuber__body {
+    fill: var(--myco-soil-2);
+    stroke: var(--myco-root);
+    stroke-width: 1;
+    opacity: 0.85;
+  }
+
+  .myco-tuber--hub .myco-tuber__body {
+    fill: var(--myco-soil-1);
+  }
+
+  .myco-root-hair {
+    color: var(--myco-root);
+    opacity: 0.5;
+  }
+
+  /* Glow-hyphae composite — the same "four layers through <use>, rising
+     blur, falling opacity" trick, reused verbatim by Threshold and
+     Undersoil so the network keeps reading as one continuous organism
+     across both scenes. */
+  .myco-hyphae-layer--3 {
     filter: blur(22px);
     opacity: 0.35;
     color: var(--myco-glow-2);
   }
 
-  .myco-cap__layer--2 {
+  .myco-hyphae-layer--2 {
     filter: blur(10px);
     opacity: 0.55;
   }
 
-  .myco-cap__layer--1 {
+  .myco-hyphae-layer--1 {
     filter: blur(3px);
     opacity: 0.8;
   }
 
-  .myco-cap__layer--core {
+  .myco-hyphae-layer--core {
     opacity: 0.95;
     color: var(--myco-glow-2);
   }
 
-  /* Scene C: among the hyphae. Rises in and settles — this is where the
-     pinned sequence ends and <MyceliumMap> takes over directly below. */
-  .myco-hero__scene--hyphae {
-    opacity: var(--o-hyphae, 0);
-    transform: scale(var(--s-hyphae, 0.75));
+  /* Scene: Undersoil. Rises in and settles — this is where the pinned
+     sequence ends and <MyceliumMap> takes over directly below. */
+  .myco-hero__scene--undersoil {
+    opacity: var(--o-undersoil, 0);
+    transform: scale(var(--s-undersoil, 0.75));
     color: var(--myco-glow-2);
+  }
+
+  .myco-undersoil__bg {
+    fill: var(--myco-soil-3);
+  }
+
+  .myco-rock {
+    fill: var(--myco-rock);
+    opacity: 0.8;
+  }
+
+  .myco-water-body {
+    fill: var(--myco-water);
+    opacity: 0.75;
+  }
+
+  .myco-water-specular {
+    fill: none;
+    stroke: var(--myco-glow);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    opacity: 0.35;
+    filter: blur(1px);
   }
 
   .myco-hero__content {
@@ -907,9 +1295,9 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     }
   }
 
-  /* The pre-scroll-jacking hero, unchanged: cap/gills only, static, no
-     spacer. Anyone who has asked for less motion gets exactly the single
-     image this component used to show, not a cut-down version of the zoom. */
+  /* The pre-scroll-jacking hero, unchanged in spirit: Threshold only,
+     static, no spacer. Anyone who has asked for less motion gets exactly
+     one image, not a cut-down version of the dive. */
   @media (prefers-reduced-motion: reduce) {
     .myco-hero__stage-wrap {
       height: 100svh;
@@ -919,12 +1307,12 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
       position: static;
     }
 
-    .myco-hero__scene--forest,
-    .myco-hero__scene--hyphae {
+    .myco-hero__scene--surface,
+    .myco-hero__scene--undersoil {
       display: none;
     }
 
-    .myco-hero__scene--cap {
+    .myco-hero__scene--threshold {
       opacity: 1;
       transform: none;
     }
@@ -938,5 +1326,4 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
       animation: none;
     }
   }
-
 </style>

@@ -22,6 +22,18 @@
   --myco-fog-1: oklch(34% 0.1 175 / 32%);
   --myco-fog-2: oklch(30% 0.13 305 / 26%);
 
+  /* The unlit half of the palette — soil, root, rock, water. Every scene in
+     MyceliumHero's redesign (Surface/Threshold/Undersoil) and every inert
+     fauna symbol below is matte-coloured from this list, never from the
+     glow tokens above: soil that glows stops reading as soil. */
+  --myco-soil-1: oklch(30% 0.03 70);
+  --myco-soil-2: oklch(22% 0.025 55);
+  --myco-soil-3: oklch(15% 0.018 45);
+  --myco-soil-fleck: oklch(42% 0.03 75);
+  --myco-root: oklch(52% 0.05 60);
+  --myco-rock: oklch(36% 0.012 240);
+  --myco-water: oklch(28% 0.05 220);
+
   /* An editorial display face for headings only — body copy, nav and cards
      stay in the theme's own Public Sans (--at-font-body untouched), so
      layout metrics and existing spacing don't move. */
@@ -30,6 +42,33 @@
   /* Set by the homepage's scroll listener (src/pages/index.astro); every
      other page leaves this at 0, so nothing below moves for them. */
   --myco-scroll-px: 0;
+}
+
+/* Shared inert-fauna/detritus vocabulary (see FaunaSymbols.astro's <symbol>
+   defs). Global, not component-scoped, because <use> instances of these
+   symbols appear in both MyceliumMap and MyceliumHero — the same visual
+   grammar has to read identically wherever it's reused. No glow filter on
+   any of these, deliberately: real soil is mostly inert crumbs of humus and
+   the odd insect, dim and unlit, and none of it may compete with the
+   network's own bioluminescence for attention. */
+.mm-detritus {
+  fill: var(--myco-soil-fleck);
+  opacity: 0.22;
+}
+
+.mm-ant,
+.mm-beetle,
+.mm-worm,
+.mm-grub {
+  fill: var(--at-text-muted);
+  stroke: var(--at-text-muted);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  opacity: 0.4;
+}
+
+.mm-worm {
+  fill: none;
 }
 
 /* A single grain/noise finish, applied once, site-wide, at very low opacity

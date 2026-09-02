@@ -1,0 +1,46 @@
+---
+// Set dressing shared by <MyceliumMap> and <MyceliumHero>'s Undersoil/
+// Threshold/Surface scenes: inert soil fauna and detritus, drawn once and
+// referenced everywhere else via <use>, so the vocabulary lives in exactly
+// one place rather than being hand-copied per caller. Mount this component
+// once per page (see src/pages/index.astro) — <use href="#..."> resolves by
+// element id anywhere in the same document, so it doesn't matter which
+// component's markup physically contains these <symbol> defs.
+//
+// Every shape below is drawn with no fill/stroke of its own so the
+// consuming .mm-* class (see src/styles/mycelium.css) decides colour: an
+// SVG <use> instance inherits paint from the element that references it,
+// same as CSS inheritance for any other property.
+---
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="myco-fauna-ant" viewBox="0 0 20 10">
+      <ellipse cx="10" cy="5" rx="5" ry="2.6" />
+      <ellipse cx="15" cy="4.3" rx="2.4" ry="2" />
+      <path d="M 6 3.6 L 2 0.4 M 6 5 L 1 5 M 6 6.4 L 2 9.6 M 12 3.4 L 15 0.6 M 13.5 3 L 17.5 1.4" />
+    </symbol>
+
+    <symbol id="myco-fauna-beetle" viewBox="0 0 22 14">
+      <ellipse cx="11" cy="7" rx="8" ry="5" />
+      <path d="M 11 2 L 11 12" />
+      <path d="M 6 4 L 1 1 M 5 7 L 0 7 M 6 10 L 1 13 M 16 4 L 21 1 M 17 7 L 22 7 M 16 10 L 21 13" />
+    </symbol>
+
+    <symbol id="myco-fauna-worm" viewBox="0 0 30 10">
+      <path d="M 2 8 C 8 2 12 9 18 4 C 22 1 26 5 28 3" fill="none" stroke-width="2" />
+    </symbol>
+
+    <symbol id="myco-fauna-grub" viewBox="0 0 16 16">
+      <path d="M 12 3 C 15 5 15 11 10 13 C 6 14.5 2 12 3 8 C 3.8 5 7 3 12 3 Z" />
+    </symbol>
+
+    <!-- viewBox 0 0 2 2 with a unit circle at its center: a <use> placed at
+         x={cx - r} y={cy - r} width={2r} height={2r} reproduces a plain
+         circle of radius r exactly, so callers can size flecks the same way
+         they'd size a <circle>, without doing symbol-viewBox math. -->
+    <symbol id="myco-fauna-fleck" viewBox="0 0 2 2">
+      <circle cx="1" cy="1" r="1" />
+    </symbol>
+  </defs>
+</svg>

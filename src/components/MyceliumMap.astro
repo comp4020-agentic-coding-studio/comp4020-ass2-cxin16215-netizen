@@ -150,15 +150,17 @@ const ants = [0.32, 0.68].map((f, i) => {
       ))
     }
     {
-      detritusSpecks.map((s) => <circle cx={s.x} cy={s.y} r={s.r} class="mm-detritus" />)
+      /* Fauna/detritus geometry lives once in FaunaSymbols.astro (mounted by
+         index.astro) and is only referenced here via <use> — see mycelium.css
+         for the shared .mm-detritus/.mm-ant styling. */
+      detritusSpecks.map((s) => (
+        <use href="#myco-fauna-fleck" x={s.x - s.r} y={s.y - s.r} width={s.r * 2} height={s.r * 2} class="mm-detritus" />
+      ))
     }
     {
       ants.map((a) => (
-        <g class="mm-ant" transform={`translate(${a.x} ${a.y}) scale(${a.flip ? -1 : 1}, 1)`}>
-          <ellipse cx="-4" cy="0" rx="2.4" ry="1.6" />
-          <ellipse cx="-0.6" cy="-0.3" rx="1.5" ry="1.2" />
-          <ellipse cx="2.6" cy="-0.5" rx="1.1" ry="1" />
-          <path d="M -6 -1.4 L -8 -3.2 M -6 0.6 L -8 2.6 M -1 1.4 L -2 3.6 M -1 -1.6 L -2 -3.8 M 1.8 1.2 L 1.4 3.4 M 1.8 -1.4 L 1.4 -3.6" />
+        <g transform={`translate(${a.x} ${a.y}) scale(${a.flip ? -1 : 1}, 1)`}>
+          <use href="#myco-fauna-ant" x="-10" y="-5" width="20" height="10" class="mm-ant" />
         </g>
       ))
     }
@@ -289,20 +291,8 @@ const ants = [0.32, 0.68].map((f, i) => {
     filter: drop-shadow(0 0 6px var(--myco-glow)) drop-shadow(0 0 12px var(--myco-glow-soft));
   }
 
-  /* Inert soil matter: no glow filter, deliberately, so it never competes
-     with the network's own light for attention. */
-  .mm-detritus {
-    fill: var(--at-text-muted);
-    opacity: 0.22;
-  }
-
-  .mm-ant {
-    fill: var(--at-text-muted);
-    stroke: var(--at-text-muted);
-    stroke-width: 0.5;
-    stroke-linecap: round;
-    opacity: 0.4;
-  }
+  /* .mm-detritus / .mm-ant are styled globally in mycelium.css now — shared
+     with MyceliumHero, which reuses the same <use>-referenced fauna. */
 
   @keyframes mm-trunk-breathe {
     0%, 100% { filter: drop-shadow(0 0 5px var(--myco-glow-soft)); }

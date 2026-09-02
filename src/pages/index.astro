@@ -2,6 +2,7 @@
 import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
 import Card from "astro-theme-university/components/Card.astro";
 import CardGrid from "astro-theme-university/components/CardGrid.astro";
+import FaunaSymbols from "../components/FaunaSymbols.astro";
 import MyceliumHero from "../components/MyceliumHero.astro";
 import MyceliumMap from "../components/MyceliumMap.astro";
 import Stamp from "../components/Stamp.astro";
@@ -22,6 +23,8 @@ import "../styles/mycelium.css";
   description={courseMeta.description}
   {...siteConfig}
 >
+  <FaunaSymbols />
+
   <MyceliumHero
     slot="hero"
     code={courseMeta.code}
