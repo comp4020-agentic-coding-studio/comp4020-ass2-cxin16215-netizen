@@ -1,30 +1,38 @@
 ---
 title: Opening lecture
 description:
-  The first lecture — what the course is, why it is shaped this way, and what
-  happens in week 1
+  What a mycorrhiza actually is, the two associations that cover most of it,
+  and why this course is suspicious of its own central metaphor from week one.
 week: 1
 date: 2027-02-22
 teachers:
-  - marisol-quaye
+  - marguerite-osei
+metaphor: "Credentials — what it takes to be recognised as a network at all"
+phenomenon:
+  "Mycorrhizal symbiosis basics: hyphae, the arbuscular/ectomycorrhizal split,
+  and what counts as evidence of connection rather than mere proximity"
 slides: /decks/week-01/
 related:
-  - sessions/01-getting-started
+  - sessions/01-credentials
 ---
 
-<!-- STARTER_CONTENT: replace this lecture, then remove this comment. -->
-
-Replace this page. A lecture entry says what was covered and links to the pages
-that own the detail, so the lecture stays short and nothing is explained twice.
-
-The `related:` ref above is a graph edge: it renders on this page and on the
-session's, so declare a connection once, on whichever side is convenient.
-
-The page renders its `slides:` link automatically. Decks are markdown too,
-under `src/decks/`; the path is part of the lecture's API metadata.
+A hypha is a single fungal filament. A mycorrhiza is what you get when hyphae
+meet a root and the two build a structure neither makes alone.
 
 ## Outline
 
-- what the course is for
-- how the weeks are shaped
-- what to do before the first session
+- arbuscular mycorrhizas (AMF): the fungus enters the root's cortical cells
+  and branches into a tree-like arbuscule inside the cell wall; the majority
+  of land plant species carry one
+- ectomycorrhizas (ECM): the fungus stays outside the cell wall, forming a
+  Hartig net between cells and a sheath around the root surface; dominant in
+  temperate and boreal forest trees
+- what "connection" has to mean before the word network is licensed: shared
+  carbon or nutrient flow between hosts through a common fungal individual,
+  not co-occurrence of species in the same soil
+- why this course is going to keep asking, every week, what a diplomatic
+  label is adding to a claim like that, and what it might be smuggling in
+
+The credentials test built in this week's Briefing is the standing check for
+everything that follows. Hold every later phenomenon against it, including
+the phenomena the convenor is fondest of.
