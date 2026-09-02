@@ -1,7 +1,8 @@
 ---
+import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
 import Card from "astro-theme-university/components/Card.astro";
 import CardGrid from "astro-theme-university/components/CardGrid.astro";
-import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import MyceliumHero from "../components/MyceliumHero.astro";
 import MyceliumMap from "../components/MyceliumMap.astro";
 import Stamp from "../components/Stamp.astro";
 import { courseMeta } from "../course-config";
@@ -9,15 +10,26 @@ import { sessionLabels, siteConfig } from "../site-config";
 import "../styles/dossier.css";
 import "../styles/mycelium.css";
 
-// No hero photograph: ContentLayout falls back to a plain <h1> when
-// heroImage is omitted, which is the point — see CLAUDE.md.
+// A real hero, not ContentLayout's plain-<h1> fallback — this page calls
+// BaseLayout directly so MyceliumHero can occupy the theme's own "hero"
+// slot with hand-authored SVG rather than a photograph (see CLAUDE.md:
+// "no glowing CGI, no stock moss hero" is about generic cliché, not about
+// bioluminescence built from this course's own node/trunk system).
 ---
 
-<ContentLayout
+<BaseLayout
   title={`${courseMeta.code}: ${courseMeta.title}`}
   description={courseMeta.description}
   {...siteConfig}
 >
+  <MyceliumHero
+    slot="hero"
+    code={courseMeta.code}
+    title={courseMeta.title}
+    tagline={courseMeta.description}
+    mapAnchorId="mycelium-map"
+  />
+
   <p><Stamp label="Case file 6674" rotate={-2} /></p>
 
   <ul class="course-tags" aria-label="Course tags">
@@ -63,7 +75,33 @@ import "../styles/mycelium.css";
       <p>Who teaches the course and how to reach them.</p>
     </Card>
   </CardGrid>
-</ContentLayout>
+</BaseLayout>
+
+<script>
+  // Drives --myco-scroll-px (read by mycelium.css's fog/spore layers and by
+  // MyceliumHero's own parallax) so the atmosphere visibly deepens as you
+  // descend from the hero into the map, rather than sitting static behind a
+  // page that just happens to scroll. rAF-throttled; skipped entirely under
+  // reduced motion, same gating MyceliumMap already applies to its pulses.
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let ticking = false;
+
+  function applyScroll() {
+    document.documentElement.style.setProperty("--myco-scroll-px", String(window.scrollY));
+    ticking = false;
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(applyScroll);
+      ticking = true;
+    }
+  }
+
+  if (!reduceMotion.matches) {
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+</script>
 
 <style>
   .course-tags {
