@@ -1,0 +1,28 @@
+---
+interface Props {
+  label: string;
+  rotate?: number;
+}
+
+const { label, rotate = -4 } = Astro.props;
+---
+
+<span class="stamp" style={`--stamp-rotate: ${rotate}deg`}>{label}</span>
+
+<style>
+  .stamp {
+    display: inline-block;
+    font-family: var(--at-font-mono);
+    font-size: var(--at-font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.3em 0.75em;
+    border: 2px solid var(--at-primary);
+    border-radius: 3px;
+    background: var(--at-primary);
+    color: var(--at-on-primary);
+    transform: rotate(var(--stamp-rotate, -4deg));
+    white-space: nowrap;
+  }
+</style>

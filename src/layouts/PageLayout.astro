@@ -1,8 +1,25 @@
 ---
 import MdxPageLayout from "astro-theme-university/layouts/MdxPageLayout.astro";
+import Stamp from "../components/Stamp.astro";
 import { siteConfig } from "../site-config";
+import "../styles/dossier.css";
+
+// MdxPageLayout has no h1 fallback of its own (unlike ContentLayout), so this
+// wrapper supplies one — rendered here, rather than left to `lead`, so the
+// case-file header can sit above the description instead of below it.
+const props = (Astro.props.frontmatter ?? Astro.props) as {
+  title: string;
+  description?: string;
+  heroTitle?: string;
+};
+const heading = props.heroTitle ?? props.title;
 ---
 
-<MdxPageLayout siteConfig={siteConfig} {...Astro.props}>
+<MdxPageLayout siteConfig={siteConfig} {...Astro.props} lead={false}>
+  <header class="dossier-header">
+    <Stamp label="Declassified" rotate={-3} />
+    <h1>{heading}</h1>
+  </header>
+  {props.description && <p class="lead">{props.description}</p>}
   <slot />
 </MdxPageLayout>
