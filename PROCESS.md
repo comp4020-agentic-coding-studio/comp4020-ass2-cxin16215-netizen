@@ -179,6 +179,78 @@ comparison table had an empty first header cell (`empty-table-header`, axe
 rule). I labelled it `Feature` and left the rest of that file — the
 student's own in-progress slide content — alone.
 
+The student judged that pass a regression, not an improvement, and said so
+plainly:
+
+> 反而更杂乱了...一点感觉都没有...美术资源...几乎完全没有...很素很素
+
+pointing at [emergencemagazine.org/engage](https://emergencemagazine.org/engage/)
+and Arknights event pages as the register actually wanted — dark, layered,
+a consistent finish across every surface — and asking for the fungal
+feeling to hit immediately on open, then extend downward as the page
+scrolls. Reading the theme rather than guessing found the root cause:
+`colorScheme` defaulted to `"auto"`, which resolves to the visitor's OS
+preference — light, for most people — where every effect the previous
+commit added was nearly invisible against a near-white background. The
+"plain" complaint and the "cluttered" complaint were the same root cause
+from two sides: real effects, tuned for a mode most visitors never saw,
+with no dominant visual event (there was no hero at all) to organise them
+around.
+
+[`28c8a11`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/28c8a11)
+forces `colorScheme: "dark"` permanently and extends `CLAUDE.md`'s existing
+anti-CGI-glow rule to say plainly what it was always about: generic stock
+cliché, not bioluminescence built from this course's own node/glyph system.
+
+[`7067b61`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/7067b61)
+rewrites `mycelium.css` from a checklist of small effects into one
+palette — near-black soil, a teal/violet duo pushed brighter than the old
+dark-mode-only values dared to be — adds a single low-opacity
+`feTurbulence` grain overlay site-wide (the "consistent finish" point from
+the Arknights reference), adds a Fraunces display face for headings, and
+demotes the effects that fire on every page equally so the homepage hero
+and map are the two places loud glow is allowed to live.
+
+Mid-pass, the student refined the hero brief further, specifically asking
+that the design not stay limited to glowing fungal thread alone — real
+soil holds humus and insects too, as quiet decoration, not the subject —
+and described the opening as a single camera move rather than a static
+image:
+
+> 我觉得我们可以不局限于真菌的地下网络作为页面美术设计...腐殖质，蚂蚁，还是
+> 其他的什么都是存在的，也可以加进去作为装饰，只是不要喧宾夺主...我脑海中预想
+> 是先出现一篇蘑菇林，然后随着镜头拉近到其中一个皱褶，然后再逐步放大到菌丝，
+> 然后我们跟随菌丝看到完整的地下世界
+
+[`a8942ae`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/a8942ae)
+answers the camera-move request as literally as hand-authored SVG allows:
+`MyceliumHero.astro` pins three scenes — a mushroom forest, one cap's
+gills, the hyphae threading through them — in a sticky stage while a tall
+spacer scrolls underneath, with a small script turning scroll position
+into per-scene opacity/scale so a fading scene visibly grows (flying past
+it) and an arriving one grows too (arriving at it). The fourth beat, "the
+complete underground world," needed no new scene: the hyphae scene hands
+off directly into the existing `MyceliumMap`, which already is that.
+Mounted by calling `BaseLayout` directly instead of `ContentLayout`, since
+`ContentLayout` only fills the theme's `"hero"` slot when a real
+`heroImage` resolves (no page has ever had one, by the content-integrity
+rule against invented staff photos) and otherwise falls back to a plain
+`<h1>` — which is the fallback this pass replaces.
+
+[`656d22c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/656d22c)
+answers the "not limited to fungal thread" request: `MyceliumMap.astro`
+gained a handful of humus specks and two small ants near the trunk,
+deliberately carrying no glow filter at all, so they read as inert soil
+matter the network grows through rather than a second light source
+competing with it. The map's own reskin — denser branch clusters, a
+blurred root-mass field behind the trunk, gradient-filled node markers,
+scroll-triggered node reveal — landed in the same commit.
+
+No image-generation or browser tool exists in this environment. Every new
+visual in this pass — the forest, the gills, the hyphae, the humus, the
+ants — is hand-authored SVG line and shape art, the same ceiling as every
+earlier pass, not a claim that a rendering or image tool was used.
+
 ## Before you ship
 
 `pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
@@ -187,16 +259,19 @@ violations, and both `spec/data-integrity.test.ts` and
 `spec/course-promises.test.ts` green (5 tests total). `git grep
 STARTER_CONTENT -- src` returns nothing.
 
-One thing I could not do and am not claiming: I browsed the built HTML for
-every page's structure and confirmed the stamp, redaction, vein-texture and
-mycelium-map elements render where expected — node count, animateMotion
-presence, link count — but I have no way to actually view `pnpm dev` in a
-browser at the desktop or phone marking viewport from this session. That
-visual pass — does the trunk's curve actually read as organic rather than
-jagged, does a node card clip against the map's edge on a real phone, does
-the stamp's rotation look intentional rather than broken, does everything
-stay legible in dark mode — is still owed before submission, and is a human
-judgement call this file isn't going to fake having made.
+One thing I could not do and am not claiming: I confirmed the new hero's
+three scenes, the map's detritus and ants, and the forced `data-theme="dark"`
+attribute are all present and correctly structured in the rendered output —
+but I have no way to actually open a browser in this session, at any
+viewport, to watch the scroll-driven zoom happen. Whether the forest-to-
+gills-to-hyphae sequence actually reads as a camera move rather than three
+things fading in turn, whether the timing feels right rather than rushed
+or sluggish, whether Fraunces renders well at the sizes used, whether the
+pinned stage behaves sanely on a phone's address-bar-collapsing viewport,
+and whether the humus/ant decoration is legible at all at the opacity
+chosen rather than invisible or, worse, distracting — every one of those is
+a human judgement call this file isn't going to fake having made. That
+visual pass is still owed before submission.
 
 This repo has not been made public and has not been shipped. That is a
 deliberate later step, not an oversight here.
