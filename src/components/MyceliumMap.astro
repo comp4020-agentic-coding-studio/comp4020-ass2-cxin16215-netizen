@@ -36,8 +36,11 @@ const HEIGHT = PAD_TOP + PAD_BOTTOM + NODE_GAP * Math.max(nodes.length - 1, 1);
 // harmonics beat against each other so the trunk reads as grown, not plotted.
 function coord(i: number) {
   const y = PAD_TOP + NODE_GAP * i;
-  const wobble = Math.sin(i * 1.15 + 0.4) * 230 + Math.sin(i * 2.7 + 1.8) * 46;
-  const x = Math.min(WIDTH - 90, Math.max(90, WIDTH / 2 + wobble));
+  // Amplitude is kept small enough that the clamp below almost never fires —
+  // the safety margin exists for card overflow on narrow viewports, not to
+  // reshape the curve into flat-sided clipping.
+  const wobble = Math.sin(i * 1.15 + 0.4) * 168 + Math.sin(i * 2.7 + 1.8) * 34;
+  const x = Math.min(WIDTH * 0.82, Math.max(WIDTH * 0.18, WIDTH / 2 + wobble));
   return { x, y };
 }
 
@@ -176,6 +179,14 @@ const pulseCount = Math.min(nodes.length, 6);
     overflow: visible;
   }
 
+  /* A node near the 18–82% band can still, on a very narrow viewport, ask
+     for more card width than the space to the edge — clip rather than let
+     it force page-wide horizontal scroll. The clamp above keeps this rare
+     and shallow, not the primary defence. */
+  .mycelium-map {
+    overflow-x: clip;
+  }
+
   .mm-trunk {
     fill: none;
     stroke: var(--at-primary);
@@ -229,7 +240,7 @@ const pulseCount = Math.min(nodes.length, 6);
     box-shadow: var(--at-shadow-sm);
     color: var(--at-text);
     text-decoration: none;
-    max-width: min(78vw, 20rem);
+    max-width: min(58vw, 18rem);
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease,
@@ -301,7 +312,7 @@ const pulseCount = Math.min(nodes.length, 6);
 
   @media (max-width: 40rem) {
     .mm-node a {
-      max-width: 68vw;
+      max-width: 46vw;
     }
 
     .mm-node__caption {
