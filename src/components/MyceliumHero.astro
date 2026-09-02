@@ -687,6 +687,42 @@ const undersoilGrub = { x: 180, y: 300 };
     return ((i * k) % 97) / 97;
   }
 
+  // A second scratch-canvas texture — three horizontal soil bands plus
+  // scattered fleck noise — same "fake it with 2D canvas" technique as
+  // makeGlowSprite above, used to skin the backdrop soil wall below with
+  // something less flat than a solid colour.
+  function makeStrataTexture(THREE: ThreeNS) {
+    const w = 256,
+      h = 512;
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d");
+    if (ctx) {
+      const bands: { y0: number; y1: number; color: string }[] = [
+        { y0: 0, y1: 0.32, color: "#4d3f30" },
+        { y0: 0.32, y1: 0.68, color: "#392e22" },
+        { y0: 0.68, y1: 1, color: "#241d15" },
+      ];
+      for (const band of bands) {
+        ctx.fillStyle = band.color;
+        ctx.fillRect(0, band.y0 * h, w, (band.y1 - band.y0) * h);
+      }
+      for (let i = 0; i < 260; i++) {
+        const x = hash(i, 53) * w;
+        const y = hash(i, 71) * h;
+        const r = 1 + hash(i, 13) * 2.4;
+        ctx.fillStyle = hash(i, 29) > 0.5 ? "rgba(120,95,60,0.35)" : "rgba(10,8,6,0.4)";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    const texture = new THREE.CanvasTexture(c);
+    texture.needsUpdate = true;
+    return texture;
+  }
+
   // The sRGB counterparts of mycelium.css's `--myco-glow` (teal) and
   // `--myco-glow-2` (violet) OKLCH tokens, converted by hand once — WebGL
   // materials need concrete numbers, not CSS custom properties, so these two
@@ -695,14 +731,29 @@ const undersoilGrub = { x: 180, y: 300 };
   const GLOW = 0x00f6c6;
   const GLOW_2 = 0xdf92ff;
 
+  // The same hand-converted-from-OKLCH treatment, this time for mycelium.
+  // css's unlit soil/root/rock/water tokens. Every new object below built
+  // from these — soil wall, rocks, tuber, detritus, moisture — is
+  // deliberately non-emissive (or barely so) and dark enough to sit under
+  // the bloom pass's existing 0.2 threshold, so "mushroom and soil" reads
+  // as soil rather than as more glow.
+  const SOIL_1 = 0x4d3f30;
+  const SOIL_2 = 0x392e22;
+  const SOIL_3 = 0x241d15;
+  const ROOT_COLOR = 0x8a6a4a;
+  const ROCK_COLOR = 0x4a4f57;
+  const WATER_COLOR = 0x1f3549;
+
   async function initWebgl(canvas: HTMLCanvasElement, stage: HTMLElement): Promise<HeroWebglScene> {
-    const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
-      import("three"),
-      import("three/addons/postprocessing/EffectComposer.js"),
-      import("three/addons/postprocessing/RenderPass.js"),
-      import("three/addons/postprocessing/UnrealBloomPass.js"),
-      import("three/addons/postprocessing/OutputPass.js"),
-    ]);
+    const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { mergeGeometries }] =
+      await Promise.all([
+        import("three"),
+        import("three/addons/postprocessing/EffectComposer.js"),
+        import("three/addons/postprocessing/RenderPass.js"),
+        import("three/addons/postprocessing/UnrealBloomPass.js"),
+        import("three/addons/postprocessing/OutputPass.js"),
+        import("three/addons/utils/BufferGeometryUtils.js"),
+      ]);
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -725,10 +776,22 @@ const undersoilGrub = { x: 180, y: 300 };
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(240, 240),
-      new THREE.MeshStandardMaterial({ color: 0x03060a, roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: SOIL_2, roughness: 1 }),
     );
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
+
+    // A large matte backdrop, well behind every foreground group and past
+    // the far end of the camera's own roam range (kfPos below never passes
+    // z=-16) — a "wall of dirt" the descent reads against without ever
+    // being approached closely enough to risk an occlusion or scale
+    // mistake that can't be caught without a browser.
+    const soilWall = new THREE.Mesh(
+      new THREE.PlaneGeometry(70, 44),
+      new THREE.MeshStandardMaterial({ map: makeStrataTexture(THREE), roughness: 1 }),
+    );
+    soilWall.position.set(0, 18, -34);
+    scene.add(soilWall);
 
     // --- Surface: the forest, scattered around the one mushroom the camera
     // is headed for. Fades out (surfaceW) as the camera commits to the dive.
@@ -741,8 +804,8 @@ const undersoilGrub = { x: 180, y: 300 };
       side: THREE.DoubleSide,
       transparent: true,
     });
-    const forestStemMat = new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.9, transparent: true });
-    for (let i = 0; i < 26; i++) {
+    const forestStemMat = new THREE.MeshStandardMaterial({ color: SOIL_3, roughness: 0.9, transparent: true });
+    for (let i = 0; i < 11; i++) {
       const angle = hash(i, 53) * Math.PI * 2;
       const radius = 4 + hash(i, 31) * 16;
       const x = Math.cos(angle) * radius;
@@ -854,6 +917,108 @@ const undersoilGrub = { x: 180, y: 300 };
     const particles = new THREE.Points(particleGeo, particleMat);
     scene.add(particles);
 
+    // --- Rocks: a scatter of low-poly matte boulders near ground level.
+    // Not gated by any weight — unlike the fauna/root-hub content below,
+    // scattered stone is a plausible part of the surface floor too, so it
+    // stays visible across the whole descent instead of fading in.
+    const rockMat = new THREE.MeshStandardMaterial({ color: ROCK_COLOR, roughness: 0.95, flatShading: true });
+    const rockGroup = new THREE.Group();
+    for (let i = 0; i < 7; i++) {
+      const angle = hash(i, 59) * Math.PI * 2;
+      const radius = 3 + hash(i, 23) * 5;
+      const r = 0.4 + hash(i, 37) * 0.7;
+      const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), rockMat);
+      rock.position.set(Math.cos(angle) * radius, r * 0.4, -12 - hash(i, 43) * 8);
+      rock.rotation.set(hash(i, 11) * Math.PI, hash(i, 29) * Math.PI, hash(i, 47) * Math.PI);
+      rockGroup.add(rock);
+    }
+    scene.add(rockGroup);
+
+    // --- Tuber: a central root-hub blob with tapering tendrils, the same
+    // hashed-Catmull-Rom tube technique as the hyphae above but thicker,
+    // matte and root-coloured rather than glowing — the "genuinely soil"
+    // counterweight sharing the hyphae tangle's own neighbourhood.
+    const tuberMat = new THREE.MeshStandardMaterial({
+      color: ROOT_COLOR,
+      roughness: 0.8,
+      transparent: true,
+      opacity: 0,
+    });
+    const tuberGroup = new THREE.Group();
+    const tuberHub = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 1), tuberMat);
+    tuberHub.scale.set(1, 0.7, 1);
+    tuberGroup.add(tuberHub);
+    for (let i = 0; i < 6; i++) {
+      const startAngle = hash(i, 67) * Math.PI * 2;
+      let x = Math.cos(startAngle) * 0.4,
+        y = -0.2,
+        z = Math.sin(startAngle) * 0.4;
+      const points = [new THREE.Vector3(x, y, z)];
+      for (let s = 0; s < 3; s++) {
+        x += Math.cos(startAngle) * 0.6 + (hash(i + s, 17) - 0.5) * 0.6;
+        y -= 0.4 + hash(i + s, 31) * 0.3;
+        z += Math.sin(startAngle) * 0.6 + (hash(i + s, 41) - 0.5) * 0.6;
+        points.push(new THREE.Vector3(x, y, z));
+      }
+      const curve = new THREE.CatmullRomCurve3(points);
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.09, 5, false), tuberMat);
+      tuberGroup.add(tube);
+    }
+    tuberGroup.position.copy(hyphaeAnchor).add(new THREE.Vector3(0, -2.6, 0));
+    scene.add(tuberGroup);
+
+    // --- Detritus: small capsule fauna-and-crumb stand-ins — literal
+    // insect models, hand-built with no way to see the result, were judged
+    // too easy to get wrong blind; this is the honest simplification.
+    // Merged once into a single BufferGeometry for one draw call.
+    const detritusGeometries: InstanceType<typeof THREE.CapsuleGeometry>[] = [];
+    for (let i = 0; i < 40; i++) {
+      const angle = hash(i, 73) * Math.PI * 2;
+      const radius = hash(i, 19) * 3.2;
+      const s = 0.05 + hash(i, 53) * 0.09;
+      const geo = new THREE.CapsuleGeometry(s, s * 1.6, 2, 4);
+      const m = new THREE.Matrix4()
+        .makeRotationFromEuler(new THREE.Euler(hash(i, 11) * Math.PI, hash(i, 29) * Math.PI, hash(i, 47) * Math.PI))
+        .setPosition(
+          hyphaeAnchor.x + Math.cos(angle) * radius,
+          hyphaeAnchor.y - 2.5 + hash(i, 61) * 0.6,
+          hyphaeAnchor.z + Math.sin(angle) * radius,
+        );
+      geo.applyMatrix4(m);
+      detritusGeometries.push(geo);
+    }
+    const detritusMat = new THREE.MeshStandardMaterial({
+      color: SOIL_1,
+      roughness: 1,
+      transparent: true,
+      opacity: 0,
+    });
+    const detritusMesh = new THREE.Mesh(mergeGeometries(detritusGeometries), detritusMat);
+    scene.add(detritusMesh);
+
+    // --- Moisture: a couple of small dark-water droplets near the tuber
+    // hub — flattened spheres, matte enough to stay under the bloom
+    // threshold even with a touch of emissive to read as wet rather than
+    // as more soil.
+    const moistureMat = new THREE.MeshStandardMaterial({
+      color: WATER_COLOR,
+      emissive: WATER_COLOR,
+      emissiveIntensity: 0.15,
+      roughness: 0.2,
+      transparent: true,
+      opacity: 0,
+    });
+    const moistureGroup = new THREE.Group();
+    for (let i = 0; i < 3; i++) {
+      const angle = hash(i, 83) * Math.PI * 2;
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(0.12 + hash(i, 17) * 0.06, 12, 8), moistureMat);
+      bead.scale.y = 0.55;
+      bead.position.set(Math.cos(angle) * 1.1, -0.35, Math.sin(angle) * 1.1);
+      moistureGroup.add(bead);
+    }
+    moistureGroup.position.copy(hyphaeAnchor).add(new THREE.Vector3(0, -2.6, 0));
+    scene.add(moistureGroup);
+
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.55, 0.2));
@@ -955,6 +1120,15 @@ const undersoilGrub = { x: 180, y: 300 };
       hyphaeGroup.visible = undersoilW > 0.01;
       hyphaeMat.opacity = undersoilW;
       particleMat.opacity = undersoilW * 0.8;
+
+      tuberGroup.visible = undersoilW > 0.01;
+      tuberMat.opacity = undersoilW;
+
+      detritusMesh.visible = undersoilW > 0.01;
+      detritusMat.opacity = undersoilW;
+
+      moistureGroup.visible = undersoilW > 0.01;
+      moistureMat.opacity = undersoilW;
     }
     setWeights({ progress: 0, lookProgress: 0, surfaceW: 1, undersoilW: 0 });
 
