@@ -8,8 +8,12 @@
   --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='rgb(0 0 0 / 10%25)' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 224 C 42 172 30 132 62 96 C 84 72 72 40 96 8'/%3E%3Cpath d='M62 96 C 92 108 124 100 152 70'/%3E%3Cpath d='M96 8 C 116 30 146 24 166 46'/%3E%3Cpath d='M152 70 C 174 58 204 64 226 36'/%3E%3Cpath d='M152 70 C 168 100 162 142 194 172'/%3E%3Cpath d='M62 96 C 30 104 8 134 14 166'/%3E%3C/g%3E%3Cg fill='rgb(0 0 0 / 16%25)'%3E%3Ccircle cx='62' cy='96' r='2.6'/%3E%3Ccircle cx='96' cy='8' r='2.2'/%3E%3Ccircle cx='152' cy='70' r='2.6'/%3E%3Ccircle cx='18' cy='224' r='2.2'/%3E%3Ccircle cx='226' cy='36' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
 }
 
+/* Tinted teal/violet rather than plain white so the dossier's paper trail
+   reads as part of the same bioluminescent world as mycelium.css's glow,
+   not a separate warm-paper skin sitting next to it. Still a background
+   texture only, at low opacity — never a foreground/contrast carrier. */
 [data-theme="dark"] {
-  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='rgb(255 255 255 / 8%25)' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 224 C 42 172 30 132 62 96 C 84 72 72 40 96 8'/%3E%3Cpath d='M62 96 C 92 108 124 100 152 70'/%3E%3Cpath d='M96 8 C 116 30 146 24 166 46'/%3E%3Cpath d='M152 70 C 174 58 204 64 226 36'/%3E%3Cpath d='M152 70 C 168 100 162 142 194 172'/%3E%3Cpath d='M62 96 C 30 104 8 134 14 166'/%3E%3C/g%3E%3Cg fill='rgb(255 255 255 / 14%25)'%3E%3Ccircle cx='62' cy='96' r='2.6'/%3E%3Ccircle cx='96' cy='8' r='2.2'/%3E%3Ccircle cx='152' cy='70' r='2.6'/%3E%3Ccircle cx='18' cy='224' r='2.2'/%3E%3Ccircle cx='226' cy='36' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='rgb(120 220 200 / 10%25)' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 224 C 42 172 30 132 62 96 C 84 72 72 40 96 8'/%3E%3Cpath d='M62 96 C 92 108 124 100 152 70'/%3E%3Cpath d='M96 8 C 116 30 146 24 166 46'/%3E%3Cpath d='M152 70 C 174 58 204 64 226 36'/%3E%3Cpath d='M152 70 C 168 100 162 142 194 172'/%3E%3Cpath d='M62 96 C 30 104 8 134 14 166'/%3E%3C/g%3E%3Cg fill='rgb(190 160 255 / 16%25)'%3E%3Ccircle cx='62' cy='96' r='2.6'/%3E%3Ccircle cx='96' cy='8' r='2.2'/%3E%3Ccircle cx='152' cy='70' r='2.6'/%3E%3Ccircle cx='18' cy='224' r='2.2'/%3E%3Ccircle cx='226' cy='36' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* A low-opacity mycelium / paper-trail texture: fungal network and paper

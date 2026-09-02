@@ -5,32 +5,55 @@
    none of it is contrast-checked by axe and none of it can regress the
    theme's own light/dark guarantees. Interactive elements (links, focus
    rings, body text) keep reading --at-* tokens exactly as before; this file
-   only adds glow, drift and texture around them. */
+   only adds glow, drift, texture and depth around them.
+
+   Dark mode is now forced site-wide (colorScheme: "dark" in site-config.ts),
+   so the palette below is written as the one true "lighting rig" rather
+   than a variant tuned for a mode most visitors would never see: near-black
+   soil, a teal/violet bioluminescent duo, pushed brighter and more
+   saturated than the old dark-mode-only values dared to be. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&display=swap");
 
 :root {
-  --myco-glow: oklch(78% 0.16 175);
-  --myco-glow-2: oklch(72% 0.19 305);
-  --myco-glow-soft: oklch(78% 0.16 175 / 35%);
-  --myco-fog-1: oklch(55% 0.1 175 / 6%);
-  --myco-fog-2: oklch(55% 0.12 305 / 5%);
+  --myco-glow: oklch(85% 0.2 175);
+  --myco-glow-2: oklch(80% 0.22 305);
+  --myco-glow-soft: oklch(85% 0.2 175 / 50%);
+  --myco-fog-1: oklch(34% 0.1 175 / 32%);
+  --myco-fog-2: oklch(30% 0.13 305 / 26%);
+
+  /* An editorial display face for headings only — body copy, nav and cards
+     stay in the theme's own Public Sans (--at-font-body untouched), so
+     layout metrics and existing spacing don't move. */
+  --myco-font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  /* Set by the homepage's scroll listener (src/pages/index.astro); every
+     other page leaves this at 0, so nothing below moves for them. */
+  --myco-scroll-px: 0;
 }
 
-[data-theme="dark"] {
-  --myco-glow: oklch(82% 0.19 175);
-  --myco-glow-2: oklch(78% 0.2 305);
-  --myco-glow-soft: oklch(82% 0.19 175 / 45%);
-  --myco-fog-1: oklch(40% 0.09 175 / 22%);
-  --myco-fog-2: oklch(38% 0.11 305 / 18%);
+/* A single grain/noise finish, applied once, site-wide, at very low opacity
+   — the "consistent material across every surface" point from the Arknights
+   UI teardown: flat CSS gradients stop looking flat once something this
+   cheap sits on top of all of them. blend mode keeps it from ever being the
+   thing that carries contrast, so axe's colour-contrast rule (which reads
+   computed foreground/background colours, not composited pixels) never
+   sees it. */
+html::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* Two slow-drifting glow blooms, fixed to the viewport, always behind
-   content. Restrained in light mode (a wash, not a cave) because the
-   dramatic "moist, glowing, subterranean" read depends on darkening the
-   page background, and this file deliberately never touches --at-bg --
-   that's the one thing dossier.css's own comment already ruled out, and
-   the theme's contrast tests are tuned against the token as-is. Dark mode,
-   which this site already supports via the existing toggle, is where the
-   full effect lives. */
+   content. The slowest parallax layer: a small multiple of scroll position
+   on top of the existing drift animation (an independent `translate`, not
+   `transform`, so the two never fight over one property). */
 body::before {
   content: "";
   position: fixed;
@@ -41,11 +64,12 @@ body::before {
     radial-gradient(38rem 30rem at 12% 8%, var(--myco-fog-1), transparent 70%),
     radial-gradient(34rem 28rem at 88% 82%, var(--myco-fog-2), transparent 70%);
   filter: blur(2px);
+  translate: 0 calc(var(--myco-scroll-px, 0) * -0.04px);
   animation: myco-fog-drift 50s ease-in-out infinite alternate;
 }
 
 /* A field of faint spore-motes, twinkling. A fixed, hand-placed dot pattern
-   (not random) so it's identical every build. */
+   (not random) so it's identical every build. Mid-speed parallax layer. */
 html::before {
   content: "";
   position: fixed;
@@ -63,6 +87,7 @@ html::before {
     radial-gradient(1.7px 1.7px at 95% 12%, var(--myco-glow), transparent),
     radial-gradient(1.4px 1.4px at 15% 90%, var(--myco-glow-2), transparent);
   background-repeat: no-repeat;
+  translate: 0 calc(var(--myco-scroll-px, 0) * -0.09px);
   animation: myco-spore-twinkle 6s ease-in-out infinite;
 }
 
@@ -104,16 +129,16 @@ html::before {
 /* Nav re-lit: same opaque --at-bg (so nothing loses contrast), plus a glowing
    underline standing in for a hyphal transport line running under the whole
    site, and a blur so the fog reads as passing *under* glass, not through a
-   hole in it. */
+   hole in it. Quiet by default — the hero and map are where loud glow lives
+   now; the nav only needs to feel like part of the same world. */
 .at-nav {
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--myco-glow-soft);
-  box-shadow: 0 1px 24px -6px var(--myco-glow);
 }
 
 /* Cards glow like fruiting bodies when a visitor's attention lands on them —
-   decorative box-shadow and transform only; border/text colours that carry
-   contrast obligations are untouched. */
+   decorative box-shadow and transform only, and only on hover/focus, so it
+   never competes with the hero for attention on first paint. */
 .at-card {
   transition:
     transform 0.25s ease,
@@ -128,8 +153,9 @@ html::before {
     0 10px 28px -12px var(--myco-glow);
 }
 
-/* The Stamp badges get a slow bioluminescent pulse, as if still carrying a
-   little current. */
+/* The Stamp badges keep a slow bioluminescent pulse — small, low-key, still
+   readable as "still carrying a little current" without competing with the
+   hero/map's louder glow. */
 .stamp {
   animation: myco-stamp-pulse 3.4s ease-in-out infinite;
 }
@@ -140,17 +166,17 @@ html::before {
     box-shadow: 0 0 0 0 transparent;
   }
   50% {
-    box-shadow: 0 0 16px 2px var(--myco-glow-soft);
+    box-shadow: 0 0 12px 1px var(--myco-glow-soft);
   }
 }
 
-/* A quiet glow behind the main heading of every page — the one place a
-   text-shadow is safe to add, since axe's colour-contrast rule evaluates
-   foreground vs. background fill, not shadow, and the glow is soft enough
-   not to blur the glyph shapes themselves. */
+/* Headings read in the display face and keep a quiet glow — quieter than
+   before, since the hero (which sets its own, louder text-shadow) is now
+   the one place this effect is allowed to be loud. */
 .at-main > h1,
 .dossier-header h1 {
-  text-shadow: 0 0 22px var(--myco-glow-soft);
+  font-family: var(--myco-font-display);
+  text-shadow: 0 0 16px var(--myco-glow-soft);
 }
 
 /* Per-topic glyphs, used on cards and detail pages (see WeekGlyph.astro). */
@@ -178,13 +204,15 @@ html::before {
   .dossier-veins,
   .stamp {
     animation: none;
+    translate: none;
   }
 }
 
 /* Decorative only, and expensive to render for no reason on paper. */
 @media print {
   body::before,
-  html::before {
+  html::before,
+  html::after {
     display: none;
   }
 }
