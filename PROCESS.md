@@ -251,6 +251,39 @@ visual in this pass — the forest, the gills, the hyphae, the humus, the
 ants — is hand-authored SVG line and shape art, the same ceiling as every
 earlier pass, not a claim that a rendering or image tool was used.
 
+The student then pushed past what SVG can do at all:
+
+> SVG的表达能力还是太有限了，我想做出那种真实商业级别的CG动画，你可以做吗，
+> 没有的话能不能采用点其他的东西
+
+I answered plainly rather than oversell the environment: there is no video-
+render, 3D-render or CG-compositing tool available here, but a genuinely
+richer technology exists that this is a real Astro build for — WebGL, via
+Three.js, which is a normal npm dependency rather than anything sandboxed.
+The student's go-ahead was direct:
+
+> rebuild the hero's three scenes in Three.js/WebGL，做一下吧
+
+[`0b877be`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/0b877be)
+answers it as a strict progressive enhancement rather than a replacement:
+the SVG/CSS three-scene hero from `a8942ae` is left completely untouched as
+the permanent fallback, and a `<canvas>` is layered on top of it, only ever
+switched on when a reduced-motion check and a live `WebGL2RenderingContext`
+feature probe both pass. Only then does a dynamic `import("three")` fire; if
+scene construction throws for any reason, the exception is swallowed and the
+page stays on the SVG version, so no visitor can land on a broken hero.
+The WebGL scene keeps the same forest → gill-starburst → hyphae-tangle
+progression and the same scroll-driven weighting as the SVG version, but as
+real procedural 3D geometry — hash-jittered mushrooms, a radial-blade gill
+starburst, `CatmullRomCurve3` hyphae tubes, a `Points` spore field — through
+an `EffectComposer` bloom pipeline (`UnrealBloomPass`, ACES filmic
+tonemapping). Every asset is still generated in code, none imported: the
+same anti-stock-CGI, grown-from-this-course's-own-system rule `28c8a11`
+already put in `CLAUDE.md` applies just as much to a shader as to an SVG
+path, and the glow colours are the same `--myco-glow`/`--myco-glow-2` tokens
+`mycelium.css` already uses, hand-converted from OKLCH to the sRGB hex
+Three.js's `Color` API needs rather than approximated by eye.
+
 ## Before you ship
 
 `pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
@@ -272,6 +305,19 @@ and whether the humus/ant decoration is legible at all at the opacity
 chosen rather than invisible or, worse, distracting — every one of those is
 a human judgement call this file isn't going to fake having made. That
 visual pass is still owed before submission.
+
+The same honest gap applies, doubled, to the WebGL hero added in
+`0b877be`: I confirmed the scene graph, materials and bloom pipeline are
+constructed correctly in code and that `pnpm check` stays green with it in
+place, but I have never seen it render, on any GPU, at any viewport. Camera
+framing across the four keyframes, whether the bloom exposure reads as
+"commercial-grade" or blown out, whether the gill starburst and hyphae
+tubes are proportioned the way the SVG version was, and actual frame rate —
+none of that has been observed. If the WebGL2 feature probe or the dynamic
+import fails for any reason, the page silently falls back to the still-
+verified SVG hero, so the worst case is "looks like before," not "broken" —
+but whether the WebGL path itself looks right is still owed before
+submission, on top of the visual pass above.
 
 This repo has not been made public and has not been shipped. That is a
 deliberate later step, not an oversight here.
