@@ -8,9 +8,12 @@ forest fungal (mycorrhizal) networks as a diplomatic system, on the fixed
 Slop University template. Every week pairs a diplomatic term with a real,
 citable phenomenon in mycorrhizal biology, and several weeks (1, 3, 8, 9, 12
 by design) argue explicitly about where that pairing overclaims rather than
-just where it fits. The visual identity — stamps, redaction, a mycelium-vein
-texture, photo-less staff pages — reads every page as a leaked case file,
-layered on the platform's fixed brand tokens rather than replacing them.
+just where it fits. Interior pages read as a leaked case file — stamps,
+redaction, a mycelium-vein texture, photo-less staff pages — layered on the
+platform's fixed brand tokens rather than replacing them. The homepage is
+its own centrepiece rather than another case-file page: all twelve weeks
+rendered as fruiting-body nodes strung along one animated mycelial trunk,
+each a real link to its Briefing.
 
 ## How I got here
 
@@ -108,6 +111,35 @@ end — each commit above reflects a state where typecheck, build (axe
 accessibility scan included), the deck compiler, and both spec files
 passed before I moved on.
 
+The student's next message was a direct, and fair, correction: the dossier
+system read as a reskin of the template's own conventions rather than
+something distinctly this course's, and asked for the homepage rebuilt
+around the mycelium network itself, with real animation, generating
+whatever assets that took.
+
+> 你这个是仿制我们课程网页的设计吗，不行，来点属于我们自己的设计，比如首页整个换成菌丝网络，每个课程在菌丝节点这种，多做点动画和艺术设计，我相信你可以做到的，缺素材尽管生成，要给用户吸引，做出成熟且符合题目的浓烈艺术设计风格吧
+
+[`f41858a`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/f41858a)
+answers that literally: `MyceliumMap.astro` reads the twelve `sessions`
+entries and grows a single trunk through them from a small seeded curve
+(two beating sine harmonics, not twelve hand-placed coordinates), converts
+that point set to a smooth path with a Catmull-Rom-to-Bezier helper, and
+renders each week as a node — a real, keyboard-focusable link to its
+Briefing, not a decorative label standing in for one. Carbon-pulses travel
+the trunk via SVG `animateMotion`; since SMIL isn't reachable from CSS,
+a small inline script mutes it under `prefers-reduced-motion`. There is no
+image-generation tool available in this environment — "generate whatever
+assets that takes" is answered with hand-authored SVG (the trunk, the
+branch tendrils, the node glyphs), not a claim that an image model was
+used.
+
+[`079bc1b`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/079bc1b)
+is a robustness pass on that same commit's honest limitation: with no
+browser available to actually look at the phone-width render, I narrowed
+the curve's amplitude and the node cards' width, and added a clip as a
+last-resort backstop, rather than tune the numbers by eye against a
+viewport I can't see.
+
 ## Before you ship
 
 `pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
@@ -117,13 +149,15 @@ violations, and both `spec/data-integrity.test.ts` and
 STARTER_CONTENT -- src` returns nothing.
 
 One thing I could not do and am not claiming: I browsed the built HTML for
-every page's structure and confirmed the stamp, redaction, and vein-texture
-elements render where expected, but I have no way to actually view `pnpm
-dev` in a browser at the desktop or phone marking viewport from this
-session. That visual pass — does the deck fit and read at both sizes, does
-the stamp's rotation look intentional rather than broken, does the dossier
-texture stay legible in dark mode — is still owed before submission, and is
-a human judgement call this file isn't going to fake having made.
+every page's structure and confirmed the stamp, redaction, vein-texture and
+mycelium-map elements render where expected — node count, animateMotion
+presence, link count — but I have no way to actually view `pnpm dev` in a
+browser at the desktop or phone marking viewport from this session. That
+visual pass — does the trunk's curve actually read as organic rather than
+jagged, does a node card clip against the map's edge on a real phone, does
+the stamp's rotation look intentional rather than broken, does everything
+stay legible in dark mode — is still owed before submission, and is a human
+judgement call this file isn't going to fake having made.
 
 This repo has not been made public and has not been shipped. That is a
 deliberate later step, not an oversight here.
