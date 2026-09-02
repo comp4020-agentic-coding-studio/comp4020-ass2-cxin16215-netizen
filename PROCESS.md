@@ -1,53 +1,129 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-Written by you, for a reader: how you got from the brief to the harness and
-agentic workflow behind this submission. Markers read this file and follow its
-citations; they don't trawl the repo for evidence you didn't point at.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+"Underground Diplomacy: Trade, Espionage and Betrayal in the Mycorrhizal
+Network" (`SLOP6674`) — a twelve-week postgraduate seminar that reframes
+forest fungal (mycorrhizal) networks as a diplomatic system, on the fixed
+Slop University template. Every week pairs a diplomatic term with a real,
+citable phenomenon in mycorrhizal biology, and several weeks (1, 3, 8, 9, 12
+by design) argue explicitly about where that pairing overclaims rather than
+just where it fits. The visual identity — stamps, redaction, a mycelium-vein
+texture, photo-less staff pages — reads every page as a leaked case file,
+layered on the platform's fixed brand tokens rather than replacing them.
 
 ## How I got here
 
-The account of the process: how the work actually went, and how you knew the
-result was right. Tell it in whatever order makes it clear. A weekly prototype
-needs a paragraph or two; an assignment needs more.
+The brief for this repo is the `start` skill's own: an empty `CLAUDE.md` and
+a template whose four content collections (`sessions`, `assessments`,
+`lectures`, `people`) are fixed, everything else ours to design. The student
+asked me to choose the topic:
 
-Cite the record as you go, as links whose text is the commit hash or range and
-whose target is this repo's commit or compare URL, so a reader clicks straight
-to the evidence:
+> 不用继承,你对此有什么意见吗,我想选自然方向
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+I proposed several nature-direction framings; the student picked from them
+and handed the final call back to me:
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
+> 我比较喜欢4,5,不过感觉这些也不算特别小众?但是也不好说,交给你判断吧
 
-> the prompt, verbatim
+I chose the mycorrhizal-diplomacy pairing because it forces a real check on
+every week: a diplomatic term is easy to invent, a citable biological
+phenomenon underneath it is not, and the mismatch between the two is
+itself interesting material (this became the week 1 "credentials test" and
+the week 12 self-audit).
 
-Screenshots are welcome where one carries the point better than a sentence does.
-Commit the file to this repo and link it with a **relative** path, which is what
-makes it render on GitHub: `![alt text](docs/before.png)`. Images don't count
-towards the word count and don't replace the citation.
+Before writing content, I read the platform rather than guessing at it:
+`src/content.config.ts` and the shared `courseNodeSchema` for the exact
+shape every collection requires (assessments need both `week` and `due`,
+easy to miss), the existing placeholder files for the date cadence and
+frontmatter conventions, and — critically — `astro-theme-university`'s
+build-time accessibility gate (`a11y-checker.ts`/`a11y-worker.mjs`, which
+runs the full axe-core ruleset over every rendered page during `pnpm
+build`). That last read directly shaped how the redaction effect is
+implemented: a `::after` pseudo-element overlay rather than `color:
+transparent` text, because the latter is a real, JSDOM-resolvable contrast
+pairing axe would have flagged.
+
+[`a70936d`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/a70936d)
+fixed a layout gap the starter's MDX pages had (no explicit layout means no
+frontmatter title rendered on the page body) before any new content could
+rely on it.
+
+[`869b091`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/869b091)
+set the course identity — title, code, 2027 semester dates, description,
+tags, and the `sessions → Briefings` rename — and deleted the four starter
+images `scripts/check-evidence.ts` hash-gates, rather than leaving
+photographic placeholders behind a tool that cannot generate real ones.
+
+The student then asked to settle the agent rules before the design work:
+
+> 让我们一起看下当前Claude.md内容,然后针对本次任务进行调整
+
+We read the starter's empty note together and agreed the four rules that
+later landed as `CLAUDE.md`. Then the visual brief, in the student's words:
+
+> 目前就这样,然后我想让你作为生物学资深讲师兼设计艺术家,大胆设计一个具有强烈前卫艺术风格的课程网站.
+
+[`7188128`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/7188128)
+built the "leaked diplomatic dossier" system in response: `Stamp.astro` (a
+rotated case-file badge, reusing the theme's own guaranteed-contrast
+`--at-primary`/`--at-on-primary` pairing rather than inventing a new
+color), a `.redacted` utility, a hand-authored mycelium-vein SVG texture
+used as a background motif, and — since no image-generation tool is
+available here — photo-less staff pages that turn the limitation into a
+"PHOTO ON FILE / CLEARANCE PENDING" design choice instead of hiding it.
+
+[`9f43f17`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/9f43f17)
+is the content pass: all twelve weeks' `sessions` and `lectures` entries,
+each carrying `metaphor`/`phenomenon` frontmatter and body text that names
+both the diplomatic label and the real phenomenon behind it (carbon-for-
+nutrient exchange, mycoheterotrophy, allelopathy, vegetative incompatibility,
+and others); the two staff entries (Dr. Marguerite Osei, Tobias Lindqvist);
+the two assessments, Field Dispatch (week 6, weight 40) and The Peace
+Conference (week 12, weight 60, due at the course's own end date); and the
+week 1 deck rewritten for the Credentials week. One YAML frontmatter bug
+surfaced immediately on the next check run — a colon inside an unquoted
+multi-line description broke the parser — and was fixed before the commit
+that follows.
+
+[`a49e94e`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/a49e94e)
+adds `spec/course-promises.test.ts`, the course's own backpressure: all
+twelve weeks carry both node types, every one of those carries a non-empty
+metaphor and phenomenon, assessment weights sum to 100, and at least one
+lecture's `slides` field resolves to a deck file that actually exists. I
+read `dist/api/index.json` directly to confirm the exact key names
+(`meta.week`, `meta.metaphor`, `meta.slides`) before writing assertions
+against them, rather than guessing the shape from the schema alone.
+
+[`fa68829`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/fa68829)
+replaced the empty starter note with the four rules in `CLAUDE.md`:
+content integrity (real phenomena, no invented citations, the frontmatter
+pair enforced by the new spec test), voice (dossier register, no
+AI-slop phrasing), process honesty (this file, written last, citing only
+real commits), and check discipline (`pnpm check` after each chunk of
+work, `STARTER_CONTENT` swept clean before finishing).
+
+`pnpm check` ran green after every one of these commits, not just at the
+end — each commit above reflects a state where typecheck, build (axe
+accessibility scan included), the deck compiler, and both spec files
+passed before I moved on.
 
 ## Before you ship
 
-`pnpm check:evidence` verifies that this comment is gone, that your citations
-resolve to real commits, that a crit week's reflection entry is in
-`reflections/`, and that your `CLAUDE.md` is there. It checks that your account
-is traceable, not that it is good: that is the marker's call.
+`pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
+violations and no broken links, 1 deck checked with no structural
+violations, and both `spec/data-integrity.test.ts` and
+`spec/course-promises.test.ts` green (5 tests total). `git grep
+STARTER_CONTENT -- src` returns nothing.
 
-Images aren't checked: unlike a citation whose SHA doesn't resolve, a broken
-image is visible the moment this file is rendered on GitHub.
+One thing I could not do and am not claiming: I browsed the built HTML for
+every page's structure and confirmed the stamp, redaction, and vein-texture
+elements render where expected, but I have no way to actually view `pnpm
+dev` in a browser at the desktop or phone marking viewport from this
+session. That visual pass — does the deck fit and read at both sizes, does
+the stamp's rotation look intentional rather than broken, does the dossier
+texture stay legible in dark mode — is still owed before submission, and is
+a human judgement call this file isn't going to fake having made.
+
+This repo has not been made public and has not been shipped. That is a
+deliberate later step, not an oversight here.
