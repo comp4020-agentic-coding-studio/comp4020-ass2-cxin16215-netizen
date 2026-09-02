@@ -4,6 +4,7 @@ import { getPublishedCollection } from "astro-course-university/content";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import { siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
+import "../../styles/mycelium.css";
 
 export async function getStaticPaths() {
   const people = await getPublishedCollection("people");

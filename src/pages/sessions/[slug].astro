@@ -6,9 +6,11 @@ import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import Stamp from "../../components/Stamp.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
+import WeekGlyph from "../../components/WeekGlyph.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
+import "../../styles/mycelium.css";
 
 export async function getStaticPaths() {
   const sessions = await getPublishedCollection("sessions");
@@ -25,6 +27,7 @@ const { Content } = await render(session);
   {...siteConfig}
 >
   <p>
+    <WeekGlyph week={session.data.week} class="week-glyph event-glyph" />
     <Stamp label={`Case file ${String(session.data.week).padStart(2, "0")}`} />
     <strong>{formatCourseDate(session.data.date)}</strong>
   </p>

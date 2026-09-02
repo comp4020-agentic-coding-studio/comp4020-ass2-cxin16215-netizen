@@ -7,9 +7,11 @@ import Callout from "astro-theme-university/components/Callout.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import MarkingModel from "../../components/MarkingModel.astro";
 import Stamp from "../../components/Stamp.astro";
+import WeekGlyph from "../../components/WeekGlyph.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
+import "../../styles/mycelium.css";
 
 export async function getStaticPaths() {
   const assessments = await getPublishedCollection("assessments");
@@ -38,6 +40,7 @@ const { Content } = await render(assessment);
     )
   }
   <p>
+    <WeekGlyph week={assessment.data.week} class="week-glyph event-glyph" />
     <Stamp label={`Weight ${assessment.data.weight}%`} />
     <strong>Due:</strong> {formatCourseDate(assessment.data.due)}
   </p>
