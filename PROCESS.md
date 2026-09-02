@@ -284,6 +284,67 @@ path, and the glow colours are the same `--myco-glow`/`--myco-glow-2` tokens
 `mycelium.css` already uses, hand-converted from OKLCH to the sRGB hex
 Three.js's `Color` API needs rather than approximated by eye.
 
+The student judged that WebGL pass insufficient too, and asked for a bold
+redo rather than a tweak — a UI redesign built specifically around a
+"mushroom and soil" feeling, and the motion itself fixed:
+
+> 我觉得不够好，大胆点尽管重做吧，UI也要重新设计，要有蘑菇和泥土的气息，
+> 同时现在动画也不够丝滑
+
+I split the redo into three separately-verified passes rather than one
+large one, so each could be checked in isolation before the next began.
+
+[`7abe523`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/7abe523)
+is the motion fix: the scroll listener from `a8942ae` onward had only ever
+written CSS variables directly from the raw scroll-event value, so every
+`--o-*`/`--s-*` transition snapped rather than eased, and jumped on resize.
+Replaced with a continuous `requestAnimationFrame` loop that reads only the
+raw scroll progress and chases it with a frame-rate-independent exponential
+decay (`damp`, half-life based rather than a fixed per-frame lerp fraction,
+so it looks the same at 60Hz and 144Hz) plus a C2-continuous `quinticStep`
+ease at every threshold crossing. The WebGL camera's own path changed too,
+from two straight-line lerps meeting at a kink to one `CatmullRomCurve3`
+sampled by arc length (`getPointAt`, not `getPoint`) — the four camera poses
+were never evenly spaced, so equal-parameter steps would have crawled the
+long leg and rushed the short one.
+
+[`154916c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/154916c)
+is the UI redesign itself: the three SVG/CSS scenes are renamed and rebuilt
+around the requested register — Surface (the forest floor), Threshold (the
+hero mushroom, now sitting between two soil-strata bands with a root tuber,
+water-table beads and insect burrows either side of it), and Undersoil
+(rock, groundwater, a root hub, denser detritus). New shared SVG-generator
+helpers (`groundLine`, `filamentField`, `rootTendrils`, `blobPath`,
+`rockPoints`) replace one-off inline paths so the same wobbly-boundary/
+tangle/blob vocabulary is reused across all three scenes instead of redrawn
+by hand each time. New `--myco-soil-*`/`-root`/`-rock`/`-water` OKLCH tokens
+in `mycelium.css` keep every matte object visually distinct from the
+bioluminescent glow tokens, deliberately: soil that glows stops reading as
+soil. A shared `FaunaSymbols.astro` module of `<symbol>` defs (ant, beetle,
+worm, grub, fleck) replaces the two hand-drawn ants from `656d22c`,
+referenced via `<use>` from both `MyceliumMap` and the new hero scenes, so
+the same fauna vocabulary reads identically wherever it appears.
+
+[`fc9ef4c`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/fc9ef4c)
+carries the same redesign into the WebGL layer, left untouched by both
+passes above: a textured strata backdrop wall (a canvas-generated three-band
+soil texture, the same "fake it on a scratch canvas" technique
+`makeGlowSprite` already used for the spore sprite), a scatter of low-poly
+rock boulders, a central root-tuber hub with tapering tendrils (the same
+hashed-Catmull-Rom tube technique as the existing hyphae, thicker and matte
+rather than glowing), a merged-geometry field of detritus standing in for
+fauna (`mergeGeometries` from `three/addons/utils/BufferGeometryUtils.js`,
+one draw call), and a couple of moisture beads. Two scope-limiting calls
+were made deliberately rather than reached for by default: bloom exclusion
+for all this new matte geometry relies on the existing `UnrealBloomPass`
+threshold (every new material is non-emissive or barely so) rather than
+adding `THREE.Layers`-based selective-bloom masking, and the ground stays a
+recoloured flat plane plus a distant backdrop wall rather than becoming a
+full pit-cross-section cylinder — both chosen because they are far easier to
+get subtly wrong, in a way no test would catch, without a way to see the
+result. The forest mushroom count also dropped from 26 to 11, to make room
+for the new geometry without the scene reading as more crowded than before.
+
 ## Before you ship
 
 `pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
@@ -318,6 +379,21 @@ import fails for any reason, the page silently falls back to the still-
 verified SVG hero, so the worst case is "looks like before," not "broken" —
 but whether the WebGL path itself looks right is still owed before
 submission, on top of the visual pass above.
+
+The same gap applies to the three-commit redo above (`7abe523`, `154916c`,
+`fc9ef4c`). `pnpm check` stayed green after each of the three — 0 typecheck
+errors, 36 pages built with 0 accessibility violations and no broken links,
+1 deck checked with no structural violations, both spec files green (5
+tests) — but that verifies structure and markup, not feel. Whether the
+`damp`/`quinticStep` motion fix actually reads as smooth ("丝滑") rather than
+just differently-timed, whether Surface/Threshold/Undersoil actually land
+as "mushroom and soil" rather than as a relabelling, whether the new WebGL
+rock/tuber/detritus geometry is proportioned sensibly and doesn't clip or
+overlap the camera path, and whether the bloom-threshold approach to
+keeping the new matte objects unlit actually looks unlit rather than dim-lit
+— none of that has been seen, for the same reason as before: no browser
+exists in this session, at any viewport, on any GPU. That visual pass is
+still owed before submission.
 
 This repo has not been made public and has not been shipped. That is a
 deliberate later step, not an oversight here.
