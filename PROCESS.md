@@ -140,6 +140,45 @@ the curve's amplitude and the node cards' width, and added a clip as a
 last-resort backstop, rather than tune the numbers by eye against a
 viewport I can't see.
 
+The student judged the dossier system still too restrained for what the
+brief was actually asking for, and named the missing register directly —
+bioluminescent, subterranean, alive — rather than "more polish":
+
+> 太素了，很学术，但是我需要的艺术感不足...bioluminescent, subterranean
+> diplomatic world...Introduce bioluminescent glyphs, hyphae textures, spore
+> particles, and underground fog...Provide full visual system...
+> Implementation-ready HTML/CSS/JS
+
+They also drew the scope line themselves, mid-task, and it mattered: they
+are building part of this (the week 1 deck's own photo research and
+sourcing, still uncommitted in this working tree as their own in-progress
+work) and asked me to stay in my lane rather than duplicate or narrate it.
+
+> 你问的那些东西，多的东西你不用担心，是我在做部分内容，你只管做好你的部分
+
+[`4ec57b7`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass2-cxin16215-netizen/commit/4ec57b7)
+is my part: a site-wide `mycelium.css` — fog drift and spore-twinkle
+pseudo-elements, a glowing nav underline, card hover-lift, a pulsing stamp,
+a heading glow — every new colour a separately-named decorative custom
+property (`--myco-*`), never a redeclaration of the fixed Slop brand triad
+or any token derived from it, so none of it is a candidate for the
+accessibility gate to flag and none of it can regress contrast. It reaches
+every page through the same mechanism `dossier.css` already proved: a
+direct import in the seven pages/layouts that need it explicitly, plus
+`PageLayout.astro`'s transitive reach into every MDX page that sets it as
+`layout`. `WeekGlyph.astro` adds one hand-authored SVG icon per week, keyed
+to the diplomatic term (exhaustive over exactly twelve weeks, unlike
+pattern-matching the free-text `metaphor` field) — wired into the three
+collection grids, the three detail pages beside their existing `Stamp`, and
+`MyceliumMap.astro`'s nodes, whose trunk, branches and pulses gained a
+`drop-shadow` glow bloom and a slow idle "breathe" on the trunk.
+
+Running `pnpm check` after these edits caught one real accessibility
+violation, in the deck rather than in anything I'd written: `week-01.deck`'s
+comparison table had an empty first header cell (`empty-table-header`, axe
+rule). I labelled it `Feature` and left the rest of that file — the
+student's own in-progress slide content — alone.
+
 ## Before you ship
 
 `pnpm check` passes: 0 typecheck errors, 36 pages built with 0 accessibility
