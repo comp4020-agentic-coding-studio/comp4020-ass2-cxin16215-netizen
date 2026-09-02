@@ -15,6 +15,22 @@
 // shows only the cap/gills scene, statically — the same single hero image
 // this component used to be, unchanged for anyone who has asked for less
 // motion.
+//
+// Layered on top of that (still SVG/CSS): a progressively-enhanced WebGL
+// pass. The SVG scenes above are not a stopgap — they are the real fallback,
+// served to everyone by default and to anyone on reduced motion or a
+// WebGL2-less browser permanently. When a capable, motion-tolerant browser
+// loads the page, a client script feature-detects WebGL2, and only then
+// dynamically imports `three` (a real npm dependency, not a CDN asset) to
+// build one continuous 3D dolly through a procedurally-grown forest, under
+// one cap, into its gills and the hyphae beyond, lit with real point/emissive
+// lighting and an UnrealBloomPass for the glow no CSS filter can match. The
+// geometry is generated the same way the SVG paths above are — hashed index
+// arithmetic, not `Math.random()`, so a given build is reproducible — never
+// an imported 3D model or texture, per the same "grown from this course's
+// own system" rule CLAUDE.md holds the SVG sigils to. Exact exposure/bloom
+// tuning below is an eyeballed guess: there is still no browser in this
+// session to look at it in.
 interface Props {
   code: string;
   title: string;
@@ -151,6 +167,8 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
         </g>
       </svg>
 
+      <canvas id="myco-hero-canvas" class="myco-hero__canvas" aria-hidden="true"></canvas>
+
       <div class="myco-hero__content">
         <p class="myco-hero__code">{code}</p>
         <h1 class="myco-hero__title">{title}</h1>
@@ -172,6 +190,13 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
   // arriving scene visibly grows too (the camera arriving at it). Skipped
   // entirely under reduced motion: the CSS fallback shows the cap scene
   // statically and nothing here needs to run.
+  //
+  // The same weights also drive an optional WebGL upgrade (see initWebgl
+  // below): the SVG/CSS path always runs first and is always correct on its
+  // own: the WebGL layer, when it manages to stand up, just sits visually on
+  // top and hides the SVGs, and if it never manages to (no WebGL2, an
+  // exception while building the scene, a slow network), nothing here has to
+  // know or care — the CSS this loop drives was never turned off.
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   function clamp01(n: number) {
@@ -187,10 +212,22 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     return a + (b - a) * t;
   }
 
+  interface SceneWeights {
+    progress: number;
+    forestW: number;
+    hyphaeW: number;
+  }
+
+  interface HeroWebglScene {
+    setWeights(weights: SceneWeights): void;
+  }
+
   if (!reduceMotion.matches) {
     const wrap = document.querySelector<HTMLElement>(".myco-hero__stage-wrap");
     const stage = document.getElementById("myco-hero-stage");
+    const canvas = document.getElementById("myco-hero-canvas") as HTMLCanvasElement | null;
     let ticking = false;
+    let webglScene: HeroWebglScene | null = null;
 
     function update() {
       ticking = false;
@@ -213,6 +250,8 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
       stage.style.setProperty("--o-hyphae", String(hyphaeW));
       stage.style.setProperty("--s-hyphae", String(lerp(0.75, 1.05, hyphaeW)));
       stage.style.setProperty("--o-content", String(1 - smoothstep(0, 0.22, progress)));
+
+      webglScene?.setWeights({ progress, forestW, hyphaeW });
     }
 
     function onScroll() {
@@ -225,6 +264,305 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+
+    // The WebGL upgrade is opt-in per browser, never a requirement: probe a
+    // throwaway canvas for WebGL2 support before touching the real one (and
+    // before paying for the `three` chunk at all), and swallow any failure
+    // from the scene build itself. Either way the CSS/SVG loop above already
+    // has this page covered.
+    if (canvas && stage) {
+      const probe = document.createElement("canvas");
+      const gl2Supported = Boolean(probe.getContext("webgl2"));
+      if (gl2Supported) {
+        initWebgl(canvas, stage)
+          .then((scene) => {
+            webglScene = scene;
+            stage.classList.add("is-webgl");
+            update();
+          })
+          .catch(() => {
+            // Stay on the SVG/CSS fallback silently — it is a complete
+            // experience on its own, not a loading state.
+          });
+      }
+    }
+  }
+
+  type ThreeNS = typeof import("three");
+
+  // A small soft-circle sprite, drawn once on a scratch 2D canvas, used as
+  // the point-sprite texture for the spore particles below. Nothing here is
+  // an imported image asset — it is generated the same way the SVG glow
+  // layers are faked, just with a canvas gradient instead of an SVG blur.
+  function makeGlowSprite(THREE: ThreeNS) {
+    const size = 64;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d");
+    if (ctx) {
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, "rgba(255,255,255,1)");
+      g.addColorStop(0.4, "rgba(255,255,255,0.6)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+    }
+    const texture = new THREE.CanvasTexture(c);
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  // Deterministic pseudo-random-ish jitter, same spirit as the hand-rolled
+  // `(i * k) % m` hashes the SVG scenes above use: a build is always the
+  // same shape, no `Math.random()` seed to make it drift between builds.
+  function hash(i: number, k: number) {
+    return ((i * k) % 97) / 97;
+  }
+
+  // The sRGB counterparts of mycelium.css's `--myco-glow` (teal) and
+  // `--myco-glow-2` (violet) OKLCH tokens, converted by hand once — WebGL
+  // materials need concrete numbers, not CSS custom properties, so these two
+  // have to be kept in visual sync with mycelium.css manually if that
+  // palette ever moves.
+  const GLOW = 0x00f6c6;
+  const GLOW_2 = 0xdf92ff;
+
+  async function initWebgl(canvas: HTMLCanvasElement, stage: HTMLElement): Promise<HeroWebglScene> {
+    const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }] = await Promise.all([
+      import("three"),
+      import("three/addons/postprocessing/EffectComposer.js"),
+      import("three/addons/postprocessing/RenderPass.js"),
+      import("three/addons/postprocessing/UnrealBloomPass.js"),
+      import("three/addons/postprocessing/OutputPass.js"),
+    ]);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x02050a);
+    scene.fog = new THREE.FogExp2(0x02050a, 0.05);
+
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+
+    scene.add(new THREE.AmbientLight(0x223344, 0.5));
+    const glowLight = new THREE.PointLight(GLOW, 12, 40, 2);
+    glowLight.position.set(0, 4, -14);
+    const glow2Light = new THREE.PointLight(GLOW_2, 10, 40, 2);
+    glow2Light.position.set(3, 6, -20);
+    scene.add(glowLight, glow2Light);
+
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(240, 240),
+      new THREE.MeshStandardMaterial({ color: 0x03060a, roughness: 1 }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // --- Scene A: the forest, scattered around the one mushroom the camera
+    // is headed for. Fades out (forestW) as the camera commits to the dive.
+    const forestGroup = new THREE.Group();
+    const forestCapMat = new THREE.MeshStandardMaterial({
+      color: GLOW_2,
+      emissive: GLOW_2,
+      emissiveIntensity: 0.5,
+      roughness: 0.5,
+      side: THREE.DoubleSide,
+      transparent: true,
+    });
+    const forestStemMat = new THREE.MeshStandardMaterial({ color: 0x14181f, roughness: 0.9, transparent: true });
+    for (let i = 0; i < 26; i++) {
+      const angle = hash(i, 53) * Math.PI * 2;
+      const radius = 4 + hash(i, 31) * 16;
+      const x = Math.cos(angle) * radius;
+      const z = -4 - hash(i, 17) * 24;
+      const s = 0.5 + hash(i, 41) * 1.1;
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), forestCapMat);
+      cap.scale.set(s, s * 0.6, s);
+      cap.position.set(x, 1.4 * s, z);
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.22 * s, 1.4 * s, 8), forestStemMat);
+      stem.position.set(x, 0.7 * s, z);
+      forestGroup.add(cap, stem);
+    }
+    scene.add(forestGroup);
+
+    // --- The hero mushroom: cap, stem and a radiating starburst of gill
+    // blades on its underside — the thing the camera passes under and
+    // looks straight up into around the midpoint of the scroll.
+    const heroGroup = new THREE.Group();
+    heroGroup.position.set(0, 0, -16);
+    scene.add(heroGroup);
+
+    const stemMat = new THREE.MeshStandardMaterial({ color: 0x181c24, roughness: 0.85 });
+    const heroStem = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 3, 16), stemMat);
+    heroStem.position.y = 1.5;
+    heroGroup.add(heroStem);
+
+    const heroCapMat = new THREE.MeshStandardMaterial({
+      color: GLOW_2,
+      emissive: GLOW_2,
+      emissiveIntensity: 0.4,
+      roughness: 0.4,
+      side: THREE.DoubleSide,
+    });
+    const heroCap = new THREE.Mesh(new THREE.SphereGeometry(2.4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), heroCapMat);
+    heroCap.position.y = 3;
+    heroGroup.add(heroCap);
+
+    const GILL_COUNT = 28;
+    const gillMat = new THREE.MeshStandardMaterial({
+      color: GLOW,
+      emissive: GLOW,
+      emissiveIntensity: 1.2,
+      roughness: 0.3,
+      side: THREE.DoubleSide,
+    });
+    const gillGeo = new THREE.BoxGeometry(0.035, 0.5, 1.7);
+    const gillGroup = new THREE.Group();
+    gillGroup.position.y = 2.85;
+    for (let i = 0; i < GILL_COUNT; i++) {
+      const a = (i / GILL_COUNT) * Math.PI * 2;
+      const midR = 0.65 + 1.7 / 2;
+      const blade = new THREE.Mesh(gillGeo, gillMat);
+      blade.position.set(Math.cos(a) * midR, 0, Math.sin(a) * midR);
+      blade.rotation.y = Math.PI / 2 - a;
+      gillGroup.add(blade);
+    }
+    heroGroup.add(gillGroup);
+
+    // --- Scene C: the hyphae — a dense tangle of glowing tubes and drifting
+    // spore particles occupying the same space as the gills, faded in
+    // (hyphaeW) only once the camera has pushed up past them.
+    const hyphaeAnchor = new THREE.Vector3(0, 3, -16);
+    const hyphaeGroup = new THREE.Group();
+    const hyphaeMat = new THREE.MeshStandardMaterial({
+      color: GLOW,
+      emissive: GLOW,
+      emissiveIntensity: 1.6,
+      roughness: 0.25,
+      transparent: true,
+      opacity: 0,
+    });
+    for (let i = 0; i < 24; i++) {
+      const startAngle = hash(i, 71) * Math.PI * 2;
+      let x = Math.cos(startAngle) * 2,
+        y = hash(i, 19) * 1.6 - 0.6,
+        z = Math.sin(startAngle) * 2;
+      const points = [new THREE.Vector3(x, y, z)];
+      for (let s = 0; s < 4; s++) {
+        x += (hash(i + s, 13) - 0.5) * 1.5;
+        y += (hash(i + s, 29) - 0.5) * 1.1;
+        z += (hash(i + s, 37) - 0.5) * 1.5;
+        points.push(new THREE.Vector3(x, y, z));
+      }
+      const curve = new THREE.CatmullRomCurve3(points);
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 20, 0.03, 5, false), hyphaeMat);
+      hyphaeGroup.add(tube);
+    }
+    hyphaeGroup.position.copy(hyphaeAnchor);
+    scene.add(hyphaeGroup);
+
+    const particleCount = 200;
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3 + 0] = hyphaeAnchor.x + (hash(i, 7) - 0.5) * 6;
+      positions[i * 3 + 1] = hyphaeAnchor.y + (hash(i, 11) - 0.5) * 4;
+      positions[i * 3 + 2] = hyphaeAnchor.z + (hash(i, 23) - 0.5) * 6;
+    }
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.12,
+      map: makeGlowSprite(THREE),
+      color: GLOW,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.55, 0.2));
+    composer.addPass(new OutputPass());
+
+    function resize() {
+      const rect = stage.getBoundingClientRect();
+      const w = Math.max(1, Math.round(rect.width));
+      const h = Math.max(1, Math.round(rect.height));
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    let isVisible = true;
+    const io = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries.some((entry) => entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+    io.observe(stage);
+
+    // Four hand-placed camera keyframes: wide forest shot, closing in on the
+    // hero cap, directly beneath it looking up into the gills, then pushed
+    // up past them into the hyphae tangle — one continuous dolly rather than
+    // the cross-fading flat layers the SVG version has to use instead.
+    const kfPos = [new THREE.Vector3(0, 5, 14), new THREE.Vector3(2, 3.2, -10), new THREE.Vector3(0, 1.6, -16), new THREE.Vector3(0, 3.4, -16)];
+    const kfLook = [new THREE.Vector3(0, 3, -10), new THREE.Vector3(0, 3, -16), new THREE.Vector3(0, 3, -16), new THREE.Vector3(0, 4.4, -16)];
+    const camPos = kfPos[0]!.clone();
+    const camLook = kfLook[0]!.clone();
+
+    function setWeights({ progress, forestW, hyphaeW }: SceneWeights) {
+      let segT: number;
+      let a: number;
+      let b: number;
+      if (progress <= 0.3) {
+        segT = smoothstep(0, 0.3, progress);
+        a = 0;
+        b = 1;
+      } else if (progress <= 0.6) {
+        segT = smoothstep(0.3, 0.6, progress);
+        a = 1;
+        b = 2;
+      } else {
+        segT = smoothstep(0.6, 1, progress);
+        a = 2;
+        b = 3;
+      }
+      camPos.lerpVectors(kfPos[a]!, kfPos[b]!, segT);
+      camLook.lerpVectors(kfLook[a]!, kfLook[b]!, segT);
+      camera.position.copy(camPos);
+      camera.lookAt(camLook);
+
+      forestGroup.visible = forestW > 0.01;
+      forestCapMat.opacity = forestW;
+      forestStemMat.opacity = forestW;
+
+      hyphaeGroup.visible = hyphaeW > 0.01;
+      hyphaeMat.opacity = hyphaeW;
+      particleMat.opacity = hyphaeW * 0.8;
+    }
+    setWeights({ progress: 0, forestW: 1, hyphaeW: 0 });
+
+    function render() {
+      requestAnimationFrame(render);
+      if (!isVisible) return;
+      particles.rotation.y = performance.now() * 0.00008;
+      composer.render();
+    }
+    render();
+
+    return { setWeights };
   }
 </script>
 
@@ -250,6 +588,36 @@ const filaments = Array.from({ length: 14 }, (_, i) => {
     width: 100%;
     height: 100%;
     pointer-events: none;
+  }
+
+  /* The WebGL upgrade's canvas. Hidden by default — it only appears once
+     initWebgl() has actually finished standing up a scene and the stage
+     gains `.is-webgl`, at which point it replaces the SVG scenes rather
+     than sitting on top of them. */
+  .myco-hero__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    pointer-events: none;
+  }
+
+  .myco-hero__stage.is-webgl .myco-hero__canvas {
+    display: block;
+  }
+
+  .myco-hero__stage.is-webgl .myco-hero__scene {
+    display: none;
+  }
+
+  /* Belt and braces: even if a race let `.is-webgl` slip through, reduced
+     motion never shows the canvas — the static cap/gills SVG below is what
+     this component promises anyone who has asked for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .myco-hero__canvas {
+      display: none !important;
+    }
   }
 
   /* Scene A: forest. Grows and fades as scroll progresses — the camera
