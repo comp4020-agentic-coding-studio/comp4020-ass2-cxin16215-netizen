@@ -1,4 +1,5 @@
 ---
+import type { ImageMetadata } from "astro";
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
 import RelatedContent from "astro-course-university/components/RelatedContent.astro";
@@ -6,7 +7,11 @@ import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import { withBase } from "astro-theme-university/url";
 import CableHeader from "../../components/CableHeader.astro";
 import HabitatOpener from "../../components/HabitatOpener.astro";
+import IdleCache from "../../components/IdleCache.astro";
+import SoilPlate from "../../components/SoilPlate.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
+import arbuscule from "../../decks/assets/amf-arbuscule-confocal.jpg";
+import spruceMycelium from "../../decks/assets/ecm-mycelium-spruce.jpg";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
@@ -21,6 +26,36 @@ export async function getStaticPaths() {
 const { lecture } = Astro.props;
 const { Content } = await render(lecture);
 const title = `Week ${lecture.data.week}: ${lecture.data.title}`;
+
+// Two weeks have a photograph that is evidence for the week's own phenomenon,
+// rather than an illustration of its metaphor. The other ten do not, and a
+// plate found to fill the gap would be the decoration this dossier keeps
+// arguing against. The caption carries what the photograph settles and what it
+// leaves open, because on this course those are different sentences.
+const plates: Record<number, { src: ImageMetadata; alt: string; caption: string; credit: string }> =
+  {
+    1: {
+      src: spruceMycelium,
+      alt: "White extraradical mycelium spreading across the roots of a white spruce seedling.",
+      caption:
+        "White extraradical mycelium on the roots of white spruce (Picea glauca) — the " +
+        "foraging body of an ectomycorrhizal fungus, and the whole of what a photograph " +
+        "can hold. Two roots carrying mycelium in one frame is proximity. It is not yet " +
+        "the connection the word network is claiming.",
+      credit: "André-Ph. D. Picard · CC BY-SA 3.0 · Wikimedia Commons",
+    },
+    2: {
+      src: arbuscule,
+      alt: "A single fluorescing arbuscule branching inside a maize root cell, imaged by confocal microscopy.",
+      caption:
+        "One arbuscule of Rhizophagus irregularis inside a maize root cell, in " +
+        "fluorescence. The branching is the exchange interface itself, the surface plant " +
+        "carbon and fungal phosphate actually cross. It fixes where the trade happens and " +
+        "nothing at all about the rate, which is the only part this week argues over.",
+      credit: "Hector Montero · CC BY-SA 2.0 · Wikimedia Commons",
+    },
+  };
+const plate = plates[lecture.data.week];
 ---
 
 <ContentLayout title={title} description={lecture.data.description} {...siteConfig}>
@@ -36,6 +71,8 @@ const title = `Week ${lecture.data.week}: ${lecture.data.title}`;
   />
   {lecture.data.slides && <p><a href={withBase(lecture.data.slides)}>Open the slides</a></p>}
   <Content />
+  {plate && <SoilPlate {...plate} />}
   <TeachingTeam teachers={lecture.data.teachers} />
+  <IdleCache />
   <RelatedContent entry={lecture} collections={graphCollections} />
 </ContentLayout>
