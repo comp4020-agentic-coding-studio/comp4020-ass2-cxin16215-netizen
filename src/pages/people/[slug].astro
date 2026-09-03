@@ -2,9 +2,11 @@
 import { render } from "astro:content";
 import { getPublishedCollection } from "astro-course-university/content";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import HabitatOpener from "../../components/HabitatOpener.astro";
 import { siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
 import "../../styles/mycelium.css";
+import "../../styles/habitats.css";
 
 export async function getStaticPaths() {
   const people = await getPublishedCollection("people");
@@ -39,6 +41,7 @@ const description = person.data.description;
   heroImageAlt={photoAlt}
   {...siteConfig}
 >
+  <HabitatOpener kind="personnel" compact />
   {!person.data.photo && (
     <div class="redacted-photo">
       Photo on file
@@ -47,7 +50,9 @@ const description = person.data.description;
     </div>
   )}
 
-  <dl>
+  <header class="cable-header">
+    <p class="cable-header__series">Personnel file · clearance teaching</p>
+    <dl>
     {roleLabel && (
       <>
         <dt>Role</dt>
@@ -79,6 +84,7 @@ const description = person.data.description;
     <dt>Contact</dt>
     <dd>{person.data.contact}</dd>
   </dl>
+  </header>
 
   <Content />
 </ContentLayout>

@@ -1,28 +1,26 @@
 ---
-import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
+import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
+import HabitatOpener from "../../components/HabitatOpener.astro";
 import SessionsGrid from "../../components/SessionsGrid.astro";
 import { sessionLabels, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
 import "../../styles/mycelium.css";
+import "../../styles/habitats.css";
 ---
 
-<ContentLayout
+<BaseLayout
   title={sessionLabels.plural}
   description={`The twelve-week teaching schedule: what happens in each ${sessionLabels.singular.toLowerCase()}, what to prepare, and what leaves the room.`}
   {...siteConfig}
 >
-  <p class="dossier-veins">
+  <HabitatOpener
+    kind="briefings"
+    deck={`The twelve-week teaching schedule: what happens in each ${sessionLabels.singular.toLowerCase()}, what to prepare, and what leaves the room.`}
+  />
+  <p class="lead">
     Twelve field windows onto the same forest floor, each dated and numbered
     like a case file. Read one before the week it names; the lecture that
     follows assumes you already have.
   </p>
   <SessionsGrid />
-</ContentLayout>
-
-<style>
-  .dossier-veins {
-    padding: var(--at-spacing-md);
-    border: 1px solid var(--at-border);
-    border-radius: var(--at-border-radius);
-  }
-</style>
+</BaseLayout>

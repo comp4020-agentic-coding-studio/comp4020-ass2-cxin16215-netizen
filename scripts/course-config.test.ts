@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { slopCourseMetaSchema } from "../src/course-config";
 
 const valid = {
-  code: "SLOP2713",
+  code: "BIOG2713",
   title: "Small Machines for Large Puddles",
   session: "Semester 2",
   year: 2027,
@@ -19,7 +19,7 @@ describe("Slop course record", () => {
     expect(slopCourseMetaSchema.safeParse(valid).success).toBe(true);
   });
 
-  it.each(["SLOP0713", "SLOP5713", "SLOP7713", "SLOP9713", "SLOP271", "COMP2713"])(
+  it.each(["BIOG0713", "BIOG5713", "BIOG7713", "BIOG9713", "BIOG271", "SLOP2713", "COMP2713"])(
     "rejects invalid code %s",
     (code) => expect(slopCourseMetaSchema.safeParse({ ...valid, code }).success).toBe(false),
   );

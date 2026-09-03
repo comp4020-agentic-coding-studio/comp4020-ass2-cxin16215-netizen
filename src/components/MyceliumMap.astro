@@ -1,11 +1,8 @@
 ---
-// The homepage's own design, not a reskin of the template: the twelve weeks
-// rendered as fruiting bodies strung along a single mycelial trunk, the trunk
-// itself grown from a small deterministic curve (not twelve hand-placed
-// coordinates) so it reads as one continuous organism rather than a chart.
-// Signal drifts down it the same way the course argues carbon and warning
-// signals actually move through a real network: continuously, along fixed
-// channels, not on demand.
+// Twelve weeks as one organism: a trunk grown from a deterministic curve,
+// hyphae branching off it, fruiting bodies at each week. Not a chart and
+// not a card list. Signal still moves down the trunk the way the course
+// says carbon actually moves — continuously, along fixed channels.
 import { getPublishedCollection } from "astro-course-university/content";
 import { withBase } from "astro-theme-university/url";
 import WeekGlyph from "./WeekGlyph.astro";
@@ -27,28 +24,21 @@ const nodes: MapNode[] = sessions
   }))
   .sort((a, b) => a.week - b.week);
 
-const WIDTH = 800;
-const NODE_GAP = 132;
-const PAD_TOP = 90;
-const PAD_BOTTOM = 100;
+const WIDTH = 1200;
+const NODE_GAP = 200;
+const PAD_TOP = 160;
+const PAD_BOTTOM = 180;
 const HEIGHT = PAD_TOP + PAD_BOTTOM + NODE_GAP * Math.max(nodes.length - 1, 1);
 
-// A fixed, seeded wobble — same build, same shape, every time. Two sine
-// harmonics beat against each other so the trunk reads as grown, not plotted.
 function coord(i: number) {
   const y = PAD_TOP + NODE_GAP * i;
-  // Amplitude is kept small enough that the clamp below almost never fires —
-  // the safety margin exists for card overflow on narrow viewports, not to
-  // reshape the curve into flat-sided clipping.
-  const wobble = Math.sin(i * 1.15 + 0.4) * 168 + Math.sin(i * 2.7 + 1.8) * 34;
-  const x = Math.min(WIDTH * 0.82, Math.max(WIDTH * 0.18, WIDTH / 2 + wobble));
+  const wobble = Math.sin(i * 1.08 + 0.35) * 150 + Math.sin(i * 2.4 + 1.6) * 32;
+  const x = Math.min(WIDTH * 0.68, Math.max(WIDTH * 0.32, WIDTH / 2 + wobble));
   return { x, y };
 }
 
 const points = nodes.map((_, i) => coord(i));
 
-// Catmull-Rom through the node points, converted to cubic Bezier segments,
-// so the trunk curves smoothly through every node instead of kinking at it.
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length === 0) return "";
   if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
@@ -69,11 +59,7 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 
 const trunkPath = smoothPath(points);
 
-// Decorative-only offshoots between consecutive nodes: nothing they touch is
-// load-bearing information, so they carry no labels and no links. Two or
-// three tendrils per gap (not one) so the trunk reads as a dense, fruiting
-// network rather than a single line with the occasional twig.
-const TENDRILS_PER_GAP = [2, 3];
+const TENDRILS_PER_GAP = [4, 5, 4, 6];
 const branches = points.slice(0, -1).flatMap((p, i) => {
   const q = points[i + 1];
   const count = TENDRILS_PER_GAP[i % TENDRILS_PER_GAP.length];
@@ -82,33 +68,48 @@ const branches = points.slice(0, -1).flatMap((p, i) => {
     const bx = p.x + (q.x - p.x) * t;
     const by = p.y + (q.y - p.y) * t;
     const side = (i + j) % 2 === 0 ? 1 : -1;
-    const reach = 46 + ((i * 37 + j * 29) % 52);
+    const reach = 70 + ((i * 37 + j * 29) % 90);
     const tipX = bx + side * reach;
-    const tipY = by - 14 + ((i * 19 + j * 13) % 24);
+    const tipY = by - 18 + ((i * 19 + j * 13) % 36);
     const cx = bx + side * reach * 0.55;
-    const cy = by - 8;
-    return { d: `M ${bx} ${by} Q ${cx} ${cy} ${tipX} ${tipY}`, tipX, tipY };
+    const cy = by - 12;
+    const fork = (i + j) % 3 === 0;
+    const forkX = tipX + side * (28 + ((i * 11 + j) % 22));
+    const forkY = tipY + 10 + ((j * 7) % 16);
+    return {
+      d: `M ${bx} ${by} Q ${cx} ${cy} ${tipX} ${tipY}`,
+      forkD: fork ? `M ${tipX} ${tipY} Q ${tipX + side * 14} ${tipY + 8} ${forkX} ${forkY}` : "",
+      tipX,
+      tipY,
+      forkX,
+      forkY,
+      fork,
+    };
   });
 });
 
-const pulseCount = Math.min(nodes.length, 6);
+const anastomoses = branches
+  .filter((_, i) => i % 6 === 2)
+  .map((b, i) => {
+    const other = branches[(i * 5 + 7) % branches.length];
+    const mx = (b.tipX + other.tipX) / 2;
+    const my = (b.tipY + other.tipY) / 2 - 16;
+    return `M ${b.tipX} ${b.tipY} Q ${mx} ${my} ${other.tipX} ${other.tipY}`;
+  });
 
-// Set dressing, not subject matter: real soil isn't only glowing fungal
-// thread — it's also inert crumbs of humus and the odd insect. Both are
-// dim, unlit and carry no glow filter at all, on purpose, so they read as
-// background matter the network grows through rather than another light
-// source competing with the trunk and pulses.
-const detritusSpecks = Array.from({ length: 14 }, (_, i) => {
+const pulseCount = Math.min(nodes.length, 7);
+
+const detritusSpecks = Array.from({ length: 22 }, (_, i) => {
   const p = points[i % points.length];
-  const ox = ((i * 47) % 140) - 70;
-  const oy = (((i * 31) % 60) - 30) + 44;
+  const ox = ((i * 47) % 180) - 90;
+  const oy = ((i * 31) % 70) - 20;
   return { x: p.x + ox, y: p.y + oy, r: 1 + ((i * 13) % 3) };
 });
 
-const ants = [0.32, 0.68].map((f, i) => {
+const ants = [0.28, 0.55, 0.82].map((f, i) => {
   const p = points[Math.min(points.length - 1, Math.floor((points.length - 1) * f))];
-  const flip = i === 1;
-  return { x: p.x + (flip ? 54 : -60), y: p.y + (flip ? -18 : 32), flip };
+  const flip = i % 2 === 1;
+  return { x: p.x + (flip ? 62 : -68), y: p.y + (flip ? -22 : 36), flip };
 });
 ---
 
@@ -120,25 +121,29 @@ const ants = [0.32, 0.68].map((f, i) => {
     aria-hidden="true"
     focusable="false"
   >
-    {/* A soft, blurred echo of the trunk's own path, much wider and almost
-        transparent — a diffuse root mass giving the crisp trunk above it
-        somewhere to sit, rather than floating on bare background. */}
     <path d={trunkPath} class="mm-trunk-field" />
     {
       branches.map((branch) => (
         <>
           <path d={branch.d} class="mm-branch" />
-          <circle cx={branch.tipX} cy={branch.tipY} r="3.4" class="mm-spore" />
+          {branch.forkD && <path d={branch.forkD} class="mm-branch mm-branch--fork" />}
+          <circle cx={branch.tipX} cy={branch.tipY} r="2.8" class="mm-spore" />
+          {branch.fork && <circle cx={branch.forkX} cy={branch.forkY} r="2.1" class="mm-spore" />}
         </>
+      ))
+    }
+    {
+      anastomoses.map((d) => (
+        <path d={d} class="mm-branch mm-branch--join" />
       ))
     }
     <path id="mm-trunk" d={trunkPath} class="mm-trunk" />
     {
       Array.from({ length: pulseCount }).map((_, i) => (
-        <circle r="4.5" class="mm-pulse">
+        <circle r="5" class="mm-pulse">
           <animateMotion
-            dur={`${11 + (i % 4) * 2.5}s`}
-            begin={`${i * -2.1}s`}
+            dur={`${12 + (i % 4) * 2.4}s`}
+            begin={`${i * -2.2}s`}
             repeatCount="indefinite"
             keyPoints="0;1"
             keyTimes="0;1"
@@ -150,9 +155,6 @@ const ants = [0.32, 0.68].map((f, i) => {
       ))
     }
     {
-      /* Fauna/detritus geometry lives once in FaunaSymbols.astro (mounted by
-         index.astro) and is only referenced here via <use> — see mycelium.css
-         for the shared .mm-detritus/.mm-ant styling. */
       detritusSpecks.map((s) => (
         <use href="#myco-fauna-fleck" x={s.x - s.r} y={s.y - s.r} width={s.r * 2} height={s.r * 2} class="mm-detritus" />
       ))
@@ -168,62 +170,60 @@ const ants = [0.32, 0.68].map((f, i) => {
 
   <ol class="mycelium-map__nodes">
     {
-      nodes.map((node, i) => (
-        <li
-          class="mm-node"
-          style={`--nx: ${(points[i].x / WIDTH) * 100}%; --ny: ${(points[i].y / HEIGHT) * 100}%; --ni: ${i}`}
-        >
-          <a href={withBase(`/sessions/${node.slug}/`)}>
-            <WeekGlyph week={node.week} class="mm-node__glyph" />
-            <span class="mm-node__text">
-              <span class="mm-node__week">Week {node.week}</span>
-              <span class="mm-node__title">{node.title}</span>
-              <span class="mm-node__caption">{node.metaphor}</span>
-            </span>
-          </a>
-        </li>
-      ))
+      nodes.map((node, i) => {
+        const side = points[i].x > WIDTH / 2 ? "left" : "right";
+        return (
+          <li
+            class:list={["mm-node", `mm-node--${side}`, i === nodes.length - 1 && "mm-node--summit", "mm-node--visible"]}
+            style={`--nx: ${(points[i].x / WIDTH) * 100}%; --ny: ${(points[i].y / HEIGHT) * 100}%; --ni: ${i}`}
+          >
+            <a href={withBase(`/sessions/${node.slug}/`)}>
+              <span class="mm-node__no" aria-hidden="true">{String(node.week).padStart(2, "0")}</span>
+              <WeekGlyph week={node.week} class="mm-node__glyph" />
+              <span class="mm-node__text">
+                <span class="mm-node__week">Week {node.week}</span>
+                <span class="mm-node__title">{node.title}</span>
+                {node.metaphor && <span class="mm-node__caption">{node.metaphor}</span>}
+              </span>
+            </a>
+          </li>
+        );
+      })
     }
   </ol>
 </div>
 
 <script>
-  // The trunk's own pulses are decorative motion, not information: anyone
-  // who has asked the OS to reduce motion gets a still network, not a
-  // slowed one. SMIL animations aren't reachable from CSS, so this is the
-  // one place the map needs a script rather than a stylesheet.
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  function applyMotionPreference() {
-    document.querySelectorAll<SVGAnimateMotionElement>(".mycelium-map animateMotion").forEach((anim) => {
-      anim.setAttribute("dur", reduceMotion.matches ? "0.1s" : anim.dataset.dur ?? "12s");
-    });
-  }
+  const map = document.querySelector<HTMLElement>(".mycelium-map");
+  const trunk = document.querySelector<SVGPathElement>("#mm-trunk");
+
   document.querySelectorAll<SVGAnimateMotionElement>(".mycelium-map animateMotion").forEach((anim) => {
     anim.dataset.dur = anim.getAttribute("dur") ?? "12s";
+    if (reduceMotion.matches) anim.setAttribute("dur", "0.1s");
   });
-  applyMotionPreference();
-  reduceMotion.addEventListener("change", applyMotionPreference);
 
-  // Nodes fade and rise in as they cross into view, rather than all sitting
-  // fully drawn on page load — the map reveals itself as you descend into
-  // it, matching the rest of the homepage's "continuous descent" framing.
-  // Reduced motion gets every node visible immediately, no observer needed.
-  const nodeEls = document.querySelectorAll<HTMLLIElement>(".mm-node");
   if (reduceMotion.matches) {
-    nodeEls.forEach((el) => el.classList.add("mm-node--visible"));
+    map?.style.setProperty("--hypha-draw", "1");
   } else {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("mm-node--visible");
-            observer.unobserve(entry.target);
-          }
-        }
-      },
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.2 },
-    );
-    nodeEls.forEach((el) => observer.observe(el));
+    if (map && trunk) {
+      const length = trunk.getTotalLength();
+      trunk.style.strokeDasharray = String(length);
+
+      function draw() {
+        if (!map || !trunk) return;
+        const rect = map.getBoundingClientRect();
+        const start = window.innerHeight * 0.78;
+        const span = rect.height + window.innerHeight * 0.2;
+        const progress = Math.min(1, Math.max(0, (start - rect.top) / span));
+        map.style.setProperty("--hypha-draw", String(progress));
+        trunk.style.strokeDashoffset = String(length * (1 - progress));
+      }
+
+      draw();
+      window.addEventListener("scroll", draw, { passive: true });
+      window.addEventListener("resize", draw);
+    }
   }
 </script>
 
@@ -231,8 +231,9 @@ const ants = [0.32, 0.68].map((f, i) => {
   .mycelium-map {
     position: relative;
     width: 100%;
+    min-height: var(--map-height);
     height: var(--map-height);
-    margin-block-end: var(--at-spacing-2xl);
+    overflow: visible;
     scroll-margin-top: 5rem;
   }
 
@@ -242,47 +243,46 @@ const ants = [0.32, 0.68].map((f, i) => {
     width: 100%;
     height: 100%;
     overflow: visible;
-  }
-
-  /* A node near the 18–82% band can still, on a very narrow viewport, ask
-     for more card width than the space to the edge — clip rather than let
-     it force page-wide horizontal scroll. The clamp above keeps this rare
-     and shallow, not the primary defence. */
-  .mycelium-map {
-    overflow-x: clip;
+    pointer-events: none;
   }
 
   .mm-trunk-field {
     fill: none;
     stroke: var(--myco-glow-2);
-    stroke-width: 46;
+    stroke-width: 64;
     stroke-linecap: round;
-    opacity: 0.07;
-    filter: blur(22px);
+    opacity: 0.09;
+    filter: blur(26px);
   }
 
   .mm-trunk {
     fill: none;
     stroke: var(--at-primary);
-    stroke-width: 3;
+    stroke-width: 4.2;
     stroke-linecap: round;
-    opacity: 0.55;
-    filter: drop-shadow(0 0 5px var(--myco-glow-soft));
+    opacity: 0.72;
+    filter: drop-shadow(0 0 7px var(--myco-glow-soft));
     animation: mm-trunk-breathe 7s ease-in-out infinite;
   }
 
   .mm-branch {
     fill: none;
     stroke: var(--at-primary);
-    stroke-width: 1.6;
+    stroke-width: 1.35;
     stroke-linecap: round;
-    opacity: 0.28;
+    opacity: calc(0.12 + var(--hypha-draw, 0) * 0.32);
     filter: drop-shadow(0 0 3px var(--myco-glow-soft));
+  }
+
+  .mm-branch--fork,
+  .mm-branch--join {
+    stroke-width: 0.9;
+    opacity: calc(0.06 + var(--hypha-draw, 0) * 0.22);
   }
 
   .mm-spore {
     fill: var(--at-secondary);
-    opacity: 0.4;
+    opacity: calc(0.15 + var(--hypha-draw, 0) * 0.4);
     filter: drop-shadow(0 0 4px var(--myco-glow-2));
   }
 
@@ -291,12 +291,14 @@ const ants = [0.32, 0.68].map((f, i) => {
     filter: drop-shadow(0 0 6px var(--myco-glow)) drop-shadow(0 0 12px var(--myco-glow-soft));
   }
 
-  /* .mm-detritus / .mm-ant are styled globally in mycelium.css now — shared
-     with MyceliumHero, which reuses the same <use>-referenced fauna. */
-
   @keyframes mm-trunk-breathe {
-    0%, 100% { filter: drop-shadow(0 0 5px var(--myco-glow-soft)); }
-    50% { filter: drop-shadow(0 0 11px var(--myco-glow)); }
+    0%,
+    100% {
+      filter: drop-shadow(0 0 5px var(--myco-glow-soft));
+    }
+    50% {
+      filter: drop-shadow(0 0 12px var(--myco-glow));
+    }
   }
 
   .mycelium-map__nodes {
@@ -310,119 +312,147 @@ const ants = [0.32, 0.68].map((f, i) => {
 
   .mm-node {
     position: absolute;
-    left: var(--nx);
     top: var(--ny);
-    transform: translate(-50%, -50%);
-    translate: 0 1.25rem;
-    opacity: 0;
-    transition:
-      opacity 0.6s ease,
-      translate 0.6s ease;
-    transition-delay: calc(var(--ni, 0) * 45ms);
-  }
-
-  .mm-node--visible {
-    translate: 0 0;
+    z-index: 1;
+    color: var(--at-text);
     opacity: 1;
   }
 
-  .mm-node a {
-    display: flex;
-    align-items: center;
-    gap: var(--at-spacing-sm);
-    padding: var(--at-spacing-xs) var(--at-spacing-sm) var(--at-spacing-xs) var(--at-spacing-xs);
-    border-radius: 999px;
-    background: var(--at-bg-elevated);
-    border: 2px solid var(--at-border);
-    box-shadow:
-      var(--at-shadow-sm),
-      0 0 16px -6px var(--myco-glow-soft);
-    color: var(--at-text);
-    text-decoration: none;
-    max-width: min(58vw, 18rem);
-    transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease,
-      border-color 0.2s ease;
+  .mm-node--right {
+    left: var(--nx);
+    transform: translateY(-50%);
+    padding-left: 1.15rem;
   }
 
-  .mm-node a:hover,
-  .mm-node a:focus-visible {
-    transform: scale(1.05);
-    border-color: var(--at-primary);
-    box-shadow:
-      var(--at-shadow-lg),
-      0 0 24px -4px var(--myco-glow);
+  .mm-node--left {
+    right: calc(100% - var(--nx));
+    left: auto;
+    transform: translateY(-50%);
+    text-align: right;
+    padding-right: 1.15rem;
+  }
+
+  .mm-node a {
+    display: grid;
+    grid-template-columns: auto auto minmax(12rem, 1fr);
+    align-items: center;
+    gap: 0.65rem 0.85rem;
+    max-width: min(42vw, 24rem);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .mm-node--left a {
+    grid-template-columns: minmax(12rem, 1fr) auto auto;
+  }
+
+  .mm-node--left .mm-node__no {
+    order: 3;
+  }
+
+  .mm-node--left .mm-node__glyph {
+    order: 2;
+  }
+
+  .mm-node--left .mm-node__text {
+    order: 1;
+  }
+
+  .mm-node__no {
+    font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    font-weight: 400;
+    line-height: 0.75;
+    letter-spacing: -0.07em;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in oklch, var(--at-text) 48%, transparent);
   }
 
   .mm-node__glyph {
     flex: none;
-    width: 2.25rem;
-    height: 2.25rem;
-    color: var(--at-on-primary);
-    border-radius: 999px;
-    background: radial-gradient(circle at 32% 28%, var(--myco-glow-2), var(--myco-glow) 55%, var(--at-primary) 100%);
-    padding: 0.3rem;
-    box-sizing: border-box;
+    width: 1.7rem;
+    height: 1.7rem;
+    color: var(--at-primary);
   }
 
   .mm-node__text {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
-    line-height: 1.2;
-    overflow: hidden;
+    gap: 0.15rem;
+    min-width: 12rem;
+    overflow: visible;
   }
 
   .mm-node__week {
     font-family: var(--at-font-mono);
     font-size: var(--at-font-size-xs);
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--at-text-secondary);
   }
 
   .mm-node__title {
-    font-weight: 700;
-    font-size: var(--at-font-size-sm);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mm-node__caption {
-    font-size: var(--at-font-size-xs);
-    color: var(--at-text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .mm-node a:hover .mm-node__caption,
-  .mm-node a:focus-visible .mm-node__caption {
+    font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+    font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
     color: var(--at-text);
   }
 
+  .mm-node__caption {
+    font-size: var(--at-font-size-sm);
+    color: var(--at-text-secondary);
+    max-width: 22rem;
+  }
+
+  .mm-node a:hover .mm-node__title,
+  .mm-node a:focus-visible .mm-node__title {
+    color: var(--at-primary);
+  }
+
+  .mm-node--summit .mm-node__no {
+    font-size: clamp(4.2rem, 9vw, 8rem);
+    -webkit-text-stroke-color: color-mix(in oklch, var(--at-primary) 55%, transparent);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .mm-node a {
-      transition: none;
-    }
-
-    .mm-node {
-      transition: none;
-      opacity: 1;
-      translate: 0 0;
-    }
-
     .mm-trunk {
       animation: none;
     }
   }
 
-  @media (max-width: 40rem) {
-    .mm-node a {
-      max-width: 46vw;
+  @media (max-width: 50rem) {
+    .mm-node--left,
+    .mm-node--right {
+      left: 1.1rem;
+      right: 1.1rem;
+      width: auto;
+      text-align: left;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .mm-node a,
+    .mm-node--left a {
+      grid-template-columns: auto minmax(0, 1fr);
+      max-width: none;
+      width: 100%;
+    }
+
+    .mm-node--left .mm-node__no,
+    .mm-node--right .mm-node__no {
+      display: none;
+    }
+
+    .mm-node--left .mm-node__glyph,
+    .mm-node--left .mm-node__text {
+      order: initial;
+    }
+
+    .mm-node__text {
+      min-width: 0;
     }
 
     .mm-node__caption {

@@ -1,0 +1,891 @@
+/* Poster-scale habitats. Unlayered so they beat the theme's
+   `body > * { grid-column: content }`. Type and photos are the design;
+   --at-* tokens stay the colour source. */
+
+body:has(.poster) {
+  overflow-x: clip;
+}
+
+body:has(.poster)::after {
+  display: none;
+}
+
+body:has(.poster) .at-main {
+  border: none;
+  box-shadow: none;
+  background-image: none;
+  padding-block-start: 0;
+}
+
+body:has(.poster) .at-nav {
+  background: color-mix(in oklch, var(--at-bg) 38%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: none;
+}
+
+body:has(.poster--compact) .at-main > h1 {
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  text-shadow: none;
+}
+
+.poster {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100svh;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  margin-block-start: calc(-1 * var(--at-nav-height, 5.5rem));
+  background: var(--at-bg);
+}
+
+.poster--compact {
+  min-height: min(48svh, 22rem);
+}
+
+.poster__plate {
+  position: absolute;
+  inset: 0;
+}
+
+.poster__plate img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poster__marks {
+  position: absolute;
+  inset: 0.95rem;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.poster__mark {
+  position: absolute;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-color: color-mix(in oklch, var(--at-text) 52%, transparent);
+  border-style: solid;
+  border-width: 0;
+}
+
+.poster__mark--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.poster__mark--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.poster__mark--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.poster__mark--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.poster__spine {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--at-nav-height, 5.5rem) + 1.15rem);
+  left: 1.05rem;
+  margin: 0;
+  font-family: var(--at-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: var(--at-text);
+  opacity: 0.7;
+}
+
+.poster__ghost {
+  position: absolute;
+  z-index: 2;
+  left: 38%;
+  top: 3vh;
+  margin: 0;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(8rem, 26vw, 16rem);
+  font-weight: 400;
+  line-height: 0.7;
+  letter-spacing: -0.08em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklch, var(--at-text) 42%, transparent);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.poster__copy {
+  position: absolute;
+  z-index: 3;
+  left: 5vw;
+  right: 0;
+  bottom: 8vh;
+}
+
+.poster__kicker {
+  margin: 0 0 0.75rem 0.12em;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--at-text);
+}
+
+.poster__word {
+  margin: 0;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(4.8rem, 16vw, 12.5rem);
+  font-weight: 400;
+  line-height: 0.76;
+  letter-spacing: -0.06em;
+  color: var(--at-text);
+  white-space: nowrap;
+}
+
+.poster__deck {
+  margin: 1.15rem 0 0 0.15em;
+  max-width: 22rem;
+  font-size: var(--at-font-size-sm);
+  color: var(--at-text);
+  opacity: 0.8;
+}
+
+.poster__credit {
+  position: absolute;
+  z-index: 3;
+  right: 1.35rem;
+  bottom: 1.05rem;
+  margin: 0;
+  max-width: 14rem;
+  font-family: var(--at-font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.62;
+  text-align: right;
+}
+
+.poster--compact .poster__ghost {
+  font-size: clamp(6rem, 28vw, 14rem);
+  top: 8%;
+}
+
+.poster--compact .poster__spine,
+.poster--compact .poster__copy {
+  display: none;
+}
+
+/* Dispatches — a cutaway of the association, not a textbook plate. */
+.poster--dispatches .poster__plate img {
+  object-fit: cover;
+  object-position: 52% 36%;
+  filter: saturate(1.08) contrast(1.06);
+}
+
+.poster--dispatches.poster--compact .poster__plate img {
+  object-position: 50% 48%;
+}
+
+.poster--dispatches::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgb(0 0 0 / 72%) 0%, rgb(0 0 0 / 8%) 46%),
+    linear-gradient(to right, rgb(0 0 0 / 28%) 0%, transparent 34%);
+  pointer-events: none;
+}
+
+body:has(.poster--dispatches) {
+  background-image: radial-gradient(ellipse 70% 40% at 0% 0%, oklch(42% 0.18 145 / 16%), transparent 62%);
+}
+
+/* Briefings — a trench. The plate is a hard vertical cut. */
+.poster--briefings:not(.poster--compact) .poster__plate {
+  inset: 0 36% 0 0;
+  clip-path: polygon(0 0, 88% 0, 100% 100%, 0 100%);
+}
+
+.poster--briefings:not(.poster--compact) .poster__plate img {
+  object-position: 16% 50%;
+  filter: saturate(0.82) contrast(1.14);
+}
+
+.poster--briefings:not(.poster--compact) .poster__copy {
+  left: auto;
+  right: 4vw;
+  text-align: right;
+}
+
+.poster--briefings:not(.poster--compact) .poster__kicker,
+.poster--briefings:not(.poster--compact) .poster__deck {
+  margin-left: auto;
+}
+
+.poster--briefings:not(.poster--compact) .poster__ghost {
+  left: auto;
+  right: -0.06em;
+  top: 18vh;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklch, var(--at-text) 40%, transparent);
+}
+
+.poster--briefings::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 11.5%,
+      oklch(22% 0.03 70 / 30%) 11.5% 12%,
+      transparent 12% 22.5%,
+      oklch(18% 0.02 55 / 24%) 22.5% 23%
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+body:has(.poster--briefings) {
+  background-image: linear-gradient(to bottom, var(--myco-soil-2), var(--at-bg) 28%);
+}
+
+/* Returns — a fruiting body filling the frame. */
+.poster--returns .poster__plate img {
+  object-position: 50% 64%;
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.poster--returns::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 78%) 0%, rgb(0 0 0 / 6%) 58%);
+  pointer-events: none;
+}
+
+.poster--returns:not(.poster--compact) .poster__word {
+  font-size: clamp(5.4rem, 20vw, 15rem);
+}
+
+body:has(.poster--returns) {
+  background-image: radial-gradient(ellipse 60% 35% at 100% 0%, oklch(48% 0.12 55 / 18%), transparent 70%);
+}
+
+/* Personnel — a sheet already carrying specimens. */
+.poster--personnel {
+  background-color: var(--at-bg-alt);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 2.15rem,
+      color-mix(in oklch, var(--at-border) 70%, transparent) 2.15rem 2.2rem
+    );
+}
+
+.poster--personnel .poster__ghost {
+  -webkit-text-stroke: 1px color-mix(in oklch, var(--at-primary) 48%, transparent);
+}
+
+.poster--personnel:not(.poster--compact) .poster__word {
+  position: relative;
+  font-size: clamp(4.4rem, 15vw, 11.5rem);
+}
+
+.poster--personnel:not(.poster--compact) .poster__word::after {
+  content: "";
+  position: absolute;
+  left: -3vw;
+  right: -10vw;
+  top: 42%;
+  height: 0.22em;
+  background: var(--at-text);
+}
+
+.poster-field {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.herb-ledger {
+  position: absolute;
+  top: calc(var(--at-nav-height, 5.5rem) + 0.85rem);
+  left: 3.2rem;
+  right: 2rem;
+  margin: 0;
+  font-family: var(--at-font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.45;
+  white-space: nowrap;
+}
+
+.herb-wall {
+  position: absolute;
+  top: 14vh;
+  right: -0.08em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: right;
+}
+
+.herb-wall li {
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(5rem, 13vw, 10.5rem);
+  font-weight: 400;
+  line-height: 0.78;
+  letter-spacing: -0.055em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in oklch, var(--at-text) 42%, transparent);
+  white-space: nowrap;
+}
+
+.herb-mounts {
+  position: absolute;
+  left: 5vw;
+  bottom: 28vh;
+  display: flex;
+  gap: 1.1rem;
+}
+
+.herb-mount {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: min(24vw, 14.5rem);
+  height: min(34vh, 16.5rem);
+  padding: 0.7rem;
+  border: 1px dashed color-mix(in oklch, var(--at-text) 42%, transparent);
+  background:
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0 7px,
+      color-mix(in oklch, var(--at-text) 8%, transparent) 7px 8px
+    );
+}
+
+.herb-mount__acc,
+.herb-mount__role {
+  font-family: var(--at-font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.7;
+}
+
+.herb-mount__void {
+  font-family: var(--at-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.4;
+}
+
+.poster--compact .herb-mounts,
+.poster--compact .herb-ledger {
+  display: none;
+}
+
+.poster--compact .herb-wall {
+  top: 12%;
+  opacity: 0.85;
+}
+
+.poster--compact .herb-wall li {
+  font-size: clamp(2.8rem, 8vw, 5.5rem);
+}
+
+body:has(.poster--personnel) {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2.5rem,
+    oklch(55% 0.02 80 / 7%) 2.5rem 2.54rem
+  );
+}
+
+/* Orders — a cap in section; the gills are the page. */
+.poster--orders {
+  background: var(--myco-soil-3);
+}
+
+.poster--orders .poster__word {
+  font-size: clamp(6rem, 22vw, 16rem);
+  color: color-mix(in oklch, var(--myco-soil-3) 72%, transparent);
+  -webkit-text-stroke: 1.5px var(--at-text);
+}
+
+.poster--orders .poster__ghost {
+  left: auto;
+  right: 2vw;
+  top: auto;
+  bottom: 18vh;
+  font-size: clamp(6rem, 18vw, 11rem);
+  -webkit-text-stroke: 1px color-mix(in oklch, var(--at-primary) 55%, transparent);
+}
+
+.hymenium {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hymenium line {
+  stroke: color-mix(in oklch, var(--at-primary) 44%, var(--myco-soil-2));
+  stroke-width: 0.28;
+}
+
+.hymenium circle {
+  fill: var(--myco-soil-2);
+  stroke: color-mix(in oklch, var(--at-primary) 50%, transparent);
+  stroke-width: 0.6;
+}
+
+.order-wall {
+  position: absolute;
+  inset: calc(var(--at-nav-height, 5.5rem) + 1.5rem) 6vw auto 18vw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.order-wall li {
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(2.6rem, 7.2vw, 6.4rem);
+  font-weight: 400;
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  color: var(--at-text);
+  white-space: nowrap;
+}
+
+.order-wall li:nth-child(2) {
+  padding-left: 8vw;
+  opacity: 0.78;
+}
+
+.order-wall li:nth-child(3) {
+  padding-left: 3vw;
+}
+
+.order-wall li:nth-child(4) {
+  padding-left: 14vw;
+  opacity: 0.7;
+}
+
+.order-wall span {
+  display: inline-block;
+  margin-right: 0.35em;
+  font-family: var(--at-font-mono);
+  font-size: 0.28em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  vertical-align: 0.65em;
+  opacity: 0.55;
+}
+
+.poster--compact .order-wall {
+  display: none;
+}
+
+body:has(.poster--orders) {
+  background-image: repeating-linear-gradient(
+    99deg,
+    transparent 0 17px,
+    oklch(70% 0.08 70 / 7%) 17px 18px
+  );
+  counter-reset: standing-order;
+}
+
+body:has(.poster--orders) .at-main > h2 {
+  counter-increment: standing-order;
+  margin-block-start: var(--at-spacing-2xl);
+  padding-block-end: 0;
+  border-bottom: none;
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+}
+
+body:has(.poster--orders) .at-main > h2::before {
+  content: "§" counter(standing-order, decimal-leading-zero);
+  display: block;
+  margin-bottom: 0.35rem;
+  font-family: var(--at-font-mono);
+  font-size: 0.32em;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--at-text-secondary);
+}
+
+/* Lost. */
+.poster--lost {
+  background: var(--at-bg-alt);
+}
+
+.poster--lost::before {
+  content: "";
+  position: absolute;
+  left: -8%;
+  top: 38%;
+  width: 120%;
+  height: 1px;
+  background: var(--at-text);
+  rotate: -18deg;
+  opacity: 0.55;
+}
+
+.poster--lost .poster__word {
+  text-decoration: line-through;
+  text-decoration-thickness: 0.06em;
+}
+
+/* Spore-print index. */
+.dossier-index--spore {
+  border-top: none;
+  margin-block-start: var(--at-spacing-2xl);
+}
+
+.dossier-index--spore .dossier-index__row {
+  border: none;
+}
+
+.dossier-index--spore .dossier-index__link {
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  padding: 0.85rem 0;
+  align-items: center;
+}
+
+.dossier-index--spore .dossier-index__no {
+  width: 3.1rem;
+  height: 3.1rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--at-border);
+  background: radial-gradient(circle at 32% 28%, oklch(58% 0.16 145 / 28%), transparent 68%);
+  color: var(--at-text);
+  font-size: var(--at-font-size-sm);
+}
+
+.dossier-index--spore .dossier-index__title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.dossier-index--spore .dossier-index__link:hover .dossier-index__no,
+.dossier-index--spore .dossier-index__link:focus-visible .dossier-index__no {
+  border-color: var(--at-primary);
+  box-shadow: 0 0 0 6px oklch(55% 0.14 145 / 18%);
+}
+
+/* Soil-horizon index. */
+.dossier-index--strata {
+  border-top: none;
+  margin-block-start: var(--at-spacing-2xl);
+}
+
+.dossier-index--strata .dossier-index__row {
+  border: none;
+  border-left: 0.7rem solid var(--horizon, var(--myco-soil-1));
+  margin-block: 0.45rem;
+  background: color-mix(in oklch, var(--at-bg-alt) 78%, transparent);
+}
+
+.dossier-index--strata .dossier-index__link {
+  padding: 1.1rem 1.15rem;
+}
+
+.dossier-index--strata .dossier-index__title {
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+}
+
+.dossier-index--strata .dossier-index__row:nth-child(6n + 1) {
+  --horizon: var(--myco-soil-1);
+}
+.dossier-index--strata .dossier-index__row:nth-child(6n + 2) {
+  --horizon: var(--myco-root);
+}
+.dossier-index--strata .dossier-index__row:nth-child(6n + 3) {
+  --horizon: var(--myco-soil-2);
+}
+.dossier-index--strata .dossier-index__row:nth-child(6n + 4) {
+  --horizon: var(--myco-soil-fleck);
+}
+.dossier-index--strata .dossier-index__row:nth-child(6n + 5) {
+  --horizon: var(--myco-soil-3);
+}
+.dossier-index--strata .dossier-index__row:nth-child(6n + 6) {
+  --horizon: var(--myco-water);
+}
+
+/* Harvest posters. */
+.harvest-index {
+  display: grid;
+  gap: var(--at-spacing-xl);
+  margin-block: var(--at-spacing-xl) var(--at-spacing-2xl);
+}
+
+.harvest-plate {
+  position: relative;
+  display: block;
+  min-height: min(82svh, 38rem);
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  isolation: isolate;
+}
+
+.harvest-plate img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.harvest-plate::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(0 0 0 / 82%) 0%, rgb(0 0 0 / 12%) 58%);
+}
+
+.harvest-plate__weight {
+  position: absolute;
+  z-index: 1;
+  right: -0.08em;
+  top: -0.1em;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(8rem, 30vw, 18rem);
+  line-height: 0.72;
+  letter-spacing: -0.08em;
+  color: var(--at-text);
+  opacity: 0.94;
+}
+
+.harvest-plate__body {
+  position: absolute;
+  z-index: 1;
+  left: 6vw;
+  right: 8vw;
+  bottom: 8%;
+  max-width: 28rem;
+}
+
+.harvest-plate__title {
+  margin: 0 0 0.4rem;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(2.1rem, 4.4vw, 3.5rem);
+  line-height: 0.92;
+  font-weight: 400;
+}
+
+.harvest-plate__title .at-heading-anchor,
+.herbarium-sheet h2 .at-heading-anchor {
+  display: none;
+}
+
+.harvest-plate__meta {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.75;
+}
+
+.harvest-plate__brief {
+  margin: 0.75rem 0 0;
+  color: var(--at-text);
+  opacity: 0.86;
+}
+
+.harvest-plate__credit {
+  position: absolute;
+  z-index: 1;
+  right: 1.2rem;
+  bottom: 1rem;
+  margin: 0;
+  max-width: 12rem;
+  font-family: var(--at-font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--at-text);
+  opacity: 0.55;
+  text-align: right;
+}
+
+.harvest-plate:hover .harvest-plate__title,
+.harvest-plate:focus-visible .harvest-plate__title {
+  color: var(--at-primary);
+}
+
+/* Herbarium sheets. */
+.herbarium-index {
+  display: flex;
+  flex-direction: column;
+  gap: var(--at-spacing-xl);
+  margin-block: var(--at-spacing-xl) var(--at-spacing-2xl);
+}
+
+.herbarium-sheet {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) minmax(0, 1fr);
+  gap: var(--at-spacing-lg);
+  min-height: min(52vh, 22rem);
+  padding: var(--at-spacing-xl);
+  border: 1px solid var(--at-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 1.75rem,
+    color-mix(in oklch, var(--at-border) 45%, transparent) 1.75rem 1.79rem
+  );
+}
+
+.herbarium-sheet .redacted-photo {
+  margin: 0;
+  align-self: stretch;
+  background: var(--at-bg);
+  border-style: dashed;
+  min-height: 16rem;
+  max-width: none;
+  aspect-ratio: auto;
+}
+
+.herbarium-sheet h2 {
+  margin: 0 0 0.35rem;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.95;
+  font-weight: 400;
+}
+
+.herbarium-sheet h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.herbarium-sheet h2 a:hover,
+.herbarium-sheet h2 a:focus-visible {
+  color: var(--at-primary);
+}
+
+.herbarium-sheet__det {
+  margin: 0 0 0.85rem;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+}
+
+.herbarium-sheet__brief {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--at-text-secondary);
+}
+
+@media (max-width: 50rem) {
+  .poster__copy {
+    left: 1.2rem;
+    right: 1rem;
+  }
+
+  .poster__word {
+    font-size: clamp(3.6rem, 17vw, 6.5rem);
+  }
+
+  .poster--briefings:not(.poster--compact) .poster__plate {
+    inset: 0 0 40% 0;
+    clip-path: none;
+  }
+
+  .poster--briefings:not(.poster--compact) .poster__copy {
+    text-align: left;
+    left: 1.2rem;
+    right: 1rem;
+  }
+
+  .poster--briefings:not(.poster--compact) .poster__kicker,
+  .poster--briefings:not(.poster--compact) .poster__deck {
+    margin-left: 0;
+  }
+
+  .herbarium-sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .herbarium-sheet .redacted-photo {
+    max-width: 10rem;
+    min-height: 10rem;
+  }
+
+  .herb-mounts {
+    left: 1.2rem;
+    bottom: 26vh;
+    gap: 0.65rem;
+  }
+
+  .herb-mount {
+    width: min(42vw, 9.5rem);
+    height: 11rem;
+  }
+
+  .herb-wall {
+    top: 36vh;
+  }
+
+  .order-wall li {
+    font-size: clamp(2rem, 11vw, 3.4rem);
+  }
+
+  .order-wall li:nth-child(even) {
+    padding-left: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster__plate img {
+    transform: none;
+  }
+}

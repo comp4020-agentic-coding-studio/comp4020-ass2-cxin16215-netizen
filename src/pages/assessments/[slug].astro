@@ -6,12 +6,13 @@ import SpecList from "astro-course-university/components/SpecList.astro";
 import Callout from "astro-theme-university/components/Callout.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import MarkingModel from "../../components/MarkingModel.astro";
-import Stamp from "../../components/Stamp.astro";
-import WeekGlyph from "../../components/WeekGlyph.astro";
+import CableHeader from "../../components/CableHeader.astro";
+import HabitatOpener from "../../components/HabitatOpener.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
 import "../../styles/mycelium.css";
+import "../../styles/habitats.css";
 
 export async function getStaticPaths() {
   const assessments = await getPublishedCollection("assessments");
@@ -30,6 +31,7 @@ const { Content } = await render(assessment);
   description={assessment.data.description}
   {...siteConfig}
 >
+  <HabitatOpener kind="returns" compact week={assessment.data.week} />
   {
     assessment.data.draft && (
       <Callout type="warning">
@@ -39,11 +41,16 @@ const { Content } = await render(assessment);
       </Callout>
     )
   }
-  <p>
-    <WeekGlyph week={assessment.data.week} class="week-glyph event-glyph" />
-    <Stamp label={`Weight ${assessment.data.weight}%`} />
-    <strong>Due:</strong> {formatCourseDate(assessment.data.due)}
-  </p>
+  <CableHeader
+    series="Return"
+    fileNo={String(assessment.data.week).padStart(2, "0")}
+    stamp={`Weight ${assessment.data.weight}%`}
+    week={assessment.data.week}
+    extra={[
+      { term: "Due", value: formatCourseDate(assessment.data.due) },
+      { term: "Weight", value: `${assessment.data.weight}%` },
+    ]}
+  />
   <Content />
   <SpecList spec={assessment.data.spec}>
     The brief poses the problem and leaves room for a response. The spec is the

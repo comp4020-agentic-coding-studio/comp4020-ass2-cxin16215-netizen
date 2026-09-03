@@ -11,3 +11,127 @@
  * slide class you reach for (`_class: quote`), a code-heavy layout, a
  * background. */
 @import url("astro-theme-university/styles/deck.css");
+
+.reveal .slides section .kicker {
+  font-family: var(--r-code-font);
+  font-size: 0.4em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+  margin-bottom: 0.55em;
+}
+
+.reveal .slides section .ai-tag,
+.reveal .slides section .credit-tag {
+  display: inline-block;
+  margin-right: 0.45em;
+  padding: 0.08em 0.4em;
+  border: 1px solid currentColor;
+  font-family: var(--r-code-font);
+  font-size: 0.82em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: 0.08em;
+}
+
+.reveal .slides section .caption,
+.reveal .slides section .credit {
+  font-size: 0.36em;
+  line-height: 1.4;
+  color: var(--at-text-secondary);
+  text-align: left;
+  margin-top: 0.9em;
+}
+
+/* Full-bleed photo slides: pin the credit to the image's edge so generated
+   work is labelled beside the picture, not lost in the title. */
+.reveal .slides section.photo-credit .caption {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1rem;
+  left: auto;
+  max-width: 38%;
+  margin: 0;
+  text-align: right;
+  color: var(--at-light-grey);
+  text-shadow: 0 1px 10px rgb(0 0 0 / 75%);
+}
+
+.reveal .slides section .sources,
+.reveal .slides section.sources-slide ul {
+  font-size: 0.42em;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.reveal .slides section table {
+  font-size: 0.5em;
+}
+
+.reveal .slides section th,
+.reveal .slides section td {
+  padding: 0.35em 0.5em;
+}
+
+/* University heading permalinks leak into decks; hide them harder than
+   astromotion's own rule, which the theme's anchor styles can outrank. */
+.reveal .slides section .at-heading-anchor {
+  display: none !important;
+}
+
+.reveal .slides section.photo-credit {
+  color: var(--at-light-grey);
+}
+
+.reveal .slides section.photo-credit :is(h1, h2) {
+  color: var(--at-light-grey);
+}
+
+/* Wide teaching plates (16:9, labels at the edges) cannot sit in a tall
+   split column with background-size: cover — that crops the side panels.
+   Stack the figure above the copy and let the image scale with contain. */
+.reveal .slides section .plate-layout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.reveal .slides section .plate-image {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem 0;
+  background: #141210;
+}
+
+.reveal .slides section .plate-image img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.reveal .slides section .plate-content {
+  flex: 0 0 auto;
+  padding: 0.3rem 4rem 1.1rem;
+}
+
+.reveal .slides section .plate-content h2 {
+  margin-block: 0.1em 0.28em;
+}
+
+.reveal .slides section .plate-content :is(p, li) {
+  font-size: 1.4rem;
+  line-height: 1.35;
+  margin-bottom: 0.35rem;
+}
+
+.reveal .slides section .plate-content .caption {
+  margin-top: 0.35em;
+}

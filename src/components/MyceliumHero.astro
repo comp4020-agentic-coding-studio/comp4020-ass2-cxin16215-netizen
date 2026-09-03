@@ -1160,6 +1160,18 @@ const undersoilGrub = { x: 180, y: 300 };
     isolation: isolate;
   }
 
+  .myco-hero__stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 78% 68% at 50% 42%, transparent 38%, var(--myco-soil-3) 100%),
+      linear-gradient(to bottom, transparent 55%, var(--myco-soil-3) 100%);
+    opacity: 0.55;
+  }
+
   .myco-hero__scene {
     position: absolute;
     inset: 0;

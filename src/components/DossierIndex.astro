@@ -1,0 +1,57 @@
+---
+import { withBase } from "astro-theme-university/url";
+import WeekGlyph from "./WeekGlyph.astro";
+
+export interface DossierItem {
+  href: string;
+  index: string;
+  title: string;
+  kicker?: string;
+  kickerLabel?: string;
+  caption?: string;
+  captionLabel?: string;
+  meta?: string;
+  week?: number;
+}
+
+interface Props {
+  items: DossierItem[];
+  labelledBy?: string;
+  tone?: "plain" | "spore" | "strata";
+}
+
+const { items, labelledBy, tone = "plain" } = Astro.props;
+---
+
+<ol class:list={["dossier-index", tone !== "plain" && `dossier-index--${tone}`]} aria-labelledby={labelledBy}>
+  {
+    items.map((item) => (
+      <li class="dossier-index__row">
+        <a class="dossier-index__link" href={withBase(item.href)}>
+          <span class="dossier-index__no">{item.index}</span>
+          <span class="dossier-index__body">
+            <span class="dossier-index__title-row">
+              {item.week != null && <WeekGlyph week={item.week} class="week-glyph grid-glyph" />}
+              <h2 class="dossier-index__title">{item.title}</h2>
+            </span>
+            {item.meta && <span class="dossier-index__meta">{item.meta}</span>}
+            {item.kicker && (
+              <span class="dossier-index__field">
+                {item.kickerLabel !== "" && <strong>{item.kickerLabel ?? "Metaphor"}</strong>}
+                {item.kicker}
+              </span>
+            )}
+            {item.caption && (
+              <span class="dossier-index__field">
+                {item.captionLabel !== "" && (
+                  <strong>{item.captionLabel ?? (item.kicker ? "Phenomenon" : "On file")}</strong>
+                )}
+                {item.caption}
+              </span>
+            )}
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ol>

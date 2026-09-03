@@ -1,0 +1,332 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  code: string;
+  title: string;
+  deck: string;
+  credit: string;
+  continueHref: string;
+}
+
+const { src, alt, code, title, deck, credit, continueHref } = Astro.props;
+const parts = title.split(/\s+/);
+const lineOne = parts[0] ?? title;
+const lineTwo = parts.slice(1).join(" ");
+---
+
+<section class="open-field" aria-label={title}>
+  <div class="open-field__stage">
+    <Image
+      src={src}
+      alt={alt}
+      widths={[768, 1536, 2560]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+      class="open-field__image"
+    />
+    <div class="open-field__veil" aria-hidden="true"></div>
+    <div class="open-field__marks" aria-hidden="true">
+      <span class="open-field__mark open-field__mark--tl"></span>
+      <span class="open-field__mark open-field__mark--tr"></span>
+      <span class="open-field__mark open-field__mark--bl"></span>
+      <span class="open-field__mark open-field__mark--br"></span>
+    </div>
+    <p class="open-field__spine" aria-hidden="true">{code}</p>
+    <p class="open-field__ghost" aria-hidden="true">{code.slice(4)}</p>
+    <div class="open-field__copy">
+      <p class="open-field__code">{code}</p>
+      <h1 class="open-field__title">
+        <span class="open-field__line open-field__line--one">{lineOne}</span>
+        {lineTwo && <span class="open-field__line open-field__line--two">{lineTwo}</span>}
+      </h1>
+      <p class="open-field__deck">{deck}</p>
+    </div>
+    <p class="open-field__credit">{credit}</p>
+    <a class="open-field__continue" href={continueHref}>
+      <span aria-hidden="true">↓</span>
+      Enter the file
+    </a>
+  </div>
+</section>
+
+<script>
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const field = document.querySelector<HTMLElement>(".open-field");
+
+  function progressFromScroll() {
+    if (!field) return 0;
+    const scrollable = field.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) return 0;
+    return Math.min(1, Math.max(0, -field.getBoundingClientRect().top / scrollable));
+  }
+
+  function apply() {
+    field?.style.setProperty("--open-progress", String(progressFromScroll()));
+  }
+
+  if (field && !reduceMotion.matches) {
+    apply();
+    window.addEventListener("scroll", apply, { passive: true });
+    window.addEventListener("resize", apply);
+  }
+</script>
+
+<style>
+  .open-field {
+    grid-column: full;
+    position: relative;
+    height: 170vh;
+    margin-block-start: calc(-1 * var(--at-nav-height, 5.5rem));
+  }
+
+  .open-field__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .open-field__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 52% 58%;
+    transform: scale(calc(1.02 + var(--open-progress, 0) * 0.08));
+    transform-origin: 52% 58%;
+  }
+
+  .open-field__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgb(0 0 0 / 68%) 0%, rgb(0 0 0 / 14%) 48%, rgb(0 0 0 / 4%) 74%),
+      linear-gradient(to right, rgb(0 0 0 / 32%) 0%, transparent 40%);
+    pointer-events: none;
+  }
+
+  .open-field__marks {
+    position: absolute;
+    inset: 0.9rem;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .open-field__mark {
+    position: absolute;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-color: color-mix(in oklch, var(--at-text) 55%, transparent);
+    border-style: solid;
+    border-width: 0;
+  }
+
+  .open-field__mark--tl {
+    top: 0;
+    left: 0;
+    border-top-width: 1px;
+    border-left-width: 1px;
+  }
+
+  .open-field__mark--tr {
+    top: 0;
+    right: 0;
+    border-top-width: 1px;
+    border-right-width: 1px;
+  }
+
+  .open-field__mark--bl {
+    bottom: 0;
+    left: 0;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+  }
+
+  .open-field__mark--br {
+    bottom: 0;
+    right: 0;
+    border-bottom-width: 1px;
+    border-right-width: 1px;
+  }
+
+  .open-field__spine {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--at-nav-height, 5.5rem) + 1.1rem);
+    left: 1.05rem;
+    margin: 0;
+    font-family: var(--at-font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--at-text);
+    opacity: 0.7;
+  }
+
+  .open-field__ghost {
+    position: absolute;
+    z-index: 1;
+    left: 36%;
+    top: 2vh;
+    margin: 0;
+    font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+    font-size: clamp(8rem, 24vw, 15rem);
+    font-weight: 400;
+    line-height: 0.7;
+    letter-spacing: -0.07em;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in oklch, var(--at-text) 40%, transparent);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .open-field__copy {
+    position: absolute;
+    z-index: 2;
+    left: 5vw;
+    right: 0;
+    bottom: 11vh;
+    max-width: none;
+    opacity: calc(1 - var(--open-progress, 0) * 0.2);
+  }
+
+  .open-field__code {
+    margin: 0 0 0.85rem 0.15em;
+    font-family: var(--at-font-mono);
+    font-size: var(--at-font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--at-text);
+  }
+
+  .open-field__title {
+    margin: 0;
+    font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+    font-weight: 400;
+    color: var(--at-text);
+  }
+
+  .open-field__line {
+    display: block;
+    line-height: 0.78;
+    letter-spacing: -0.055em;
+    white-space: nowrap;
+  }
+
+  .open-field__line--one {
+    font-size: clamp(2.6rem, 8vw, 6.4rem);
+    opacity: 0.88;
+  }
+
+  .open-field__line--two {
+    font-size: clamp(5.2rem, 16vw, 13.5rem);
+    margin-left: -0.04em;
+  }
+
+  .open-field__deck {
+    margin: 1.35rem 0 0 0.2em;
+    max-width: 28rem;
+    font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+    font-size: var(--at-font-size-md);
+    line-height: 1.4;
+    color: var(--at-text);
+    opacity: 0.82;
+  }
+
+  .open-field__credit {
+    position: absolute;
+    z-index: 2;
+    right: 1.4rem;
+    bottom: 1.15rem;
+    margin: 0;
+    max-width: 15rem;
+    font-family: var(--at-font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--at-text);
+    opacity: 0.62;
+    text-align: right;
+  }
+
+  .open-field__continue {
+    position: absolute;
+    z-index: 3;
+    left: 5vw;
+    bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    font-family: var(--at-font-mono);
+    font-size: var(--at-font-size-xs);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--at-text);
+    text-decoration: none;
+    opacity: 0.78;
+  }
+
+  .open-field__continue:hover,
+  .open-field__continue:focus-visible {
+    opacity: 1;
+  }
+
+  .open-field__continue span {
+    animation: open-field-bob 1.8s ease-in-out infinite;
+  }
+
+  @keyframes open-field-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(0.35rem);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .open-field__copy {
+      left: 1.2rem;
+      right: 1rem;
+      bottom: 14vh;
+    }
+
+    .open-field__line--two {
+      font-size: clamp(3.8rem, 18vw, 6rem);
+    }
+
+    .open-field__continue {
+      left: 1.2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .open-field {
+      height: 100svh;
+    }
+
+    .open-field__image,
+    .open-field__copy {
+      transform: none;
+      opacity: 1;
+    }
+
+    .open-field__continue span {
+      animation: none;
+    }
+  }
+</style>

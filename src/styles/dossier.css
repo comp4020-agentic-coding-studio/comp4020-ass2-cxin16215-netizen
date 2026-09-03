@@ -5,7 +5,7 @@
    in src/site-config.ts — it only adds a decorative layer on top of it. */
 
 :root {
-  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='rgb(0 0 0 / 10%25)' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 224 C 42 172 30 132 62 96 C 84 72 72 40 96 8'/%3E%3Cpath d='M62 96 C 92 108 124 100 152 70'/%3E%3Cpath d='M96 8 C 116 30 146 24 166 46'/%3E%3Cpath d='M152 70 C 174 58 204 64 226 36'/%3E%3Cpath d='M152 70 C 168 100 162 142 194 172'/%3E%3Cpath d='M62 96 C 30 104 8 134 14 166'/%3E%3C/g%3E%3Cg fill='rgb(0 0 0 / 16%25)'%3E%3Ccircle cx='62' cy='96' r='2.6'/%3E%3Ccircle cx='96' cy='8' r='2.2'/%3E%3Ccircle cx='152' cy='70' r='2.6'/%3E%3Ccircle cx='18' cy='224' r='2.2'/%3E%3Ccircle cx='226' cy='36' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'%3E%3Cg fill='none' stroke='rgb(0 0 0 / 14%25)' stroke-width='1.15' stroke-linecap='round'%3E%3Cpath d='M8 268 C 36 210 22 168 58 128 C 86 98 70 54 104 12'/%3E%3Cpath d='M58 128 C 96 142 138 128 176 88'/%3E%3Cpath d='M104 12 C 128 40 164 32 188 58'/%3E%3Cpath d='M176 88 C 204 72 238 80 268 42'/%3E%3Cpath d='M176 88 C 198 128 188 176 228 214'/%3E%3Cpath d='M58 128 C 22 140 -4 176 8 214'/%3E%3Cpath d='M104 12 C 88 48 112 72 98 104'/%3E%3Cpath d='M228 214 C 248 236 242 262 268 272'/%3E%3Cpath d='M8 214 C 40 232 72 220 96 248'/%3E%3Cpath d='M188 58 C 210 44 236 52 252 28'/%3E%3C/g%3E%3Cg fill='rgb(0 0 0 / 20%25)'%3E%3Ccircle cx='58' cy='128' r='2.8'/%3E%3Ccircle cx='104' cy='12' r='2.2'/%3E%3Ccircle cx='176' cy='88' r='2.8'/%3E%3Ccircle cx='8' cy='268' r='2.2'/%3E%3Ccircle cx='268' cy='42' r='2.2'/%3E%3Ccircle cx='228' cy='214' r='2.4'/%3E%3Ccircle cx='188' cy='58' r='2'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Tinted teal/violet rather than plain white so the dossier's paper trail
@@ -13,7 +13,7 @@
    not a separate warm-paper skin sitting next to it. Still a background
    texture only, at low opacity — never a foreground/contrast carrier. */
 [data-theme="dark"] {
-  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='rgb(120 220 200 / 10%25)' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M18 224 C 42 172 30 132 62 96 C 84 72 72 40 96 8'/%3E%3Cpath d='M62 96 C 92 108 124 100 152 70'/%3E%3Cpath d='M96 8 C 116 30 146 24 166 46'/%3E%3Cpath d='M152 70 C 174 58 204 64 226 36'/%3E%3Cpath d='M152 70 C 168 100 162 142 194 172'/%3E%3Cpath d='M62 96 C 30 104 8 134 14 166'/%3E%3C/g%3E%3Cg fill='rgb(190 160 255 / 16%25)'%3E%3Ccircle cx='62' cy='96' r='2.6'/%3E%3Ccircle cx='96' cy='8' r='2.2'/%3E%3Ccircle cx='152' cy='70' r='2.6'/%3E%3Ccircle cx='18' cy='224' r='2.2'/%3E%3Ccircle cx='226' cy='36' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  --dossier-veins: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'%3E%3Cg fill='none' stroke='rgb(186 148 86 / 28%25)' stroke-width='1.25' stroke-linecap='round'%3E%3Cpath d='M8 268 C 36 210 22 168 58 128 C 86 98 70 54 104 12'/%3E%3Cpath d='M58 128 C 96 142 138 128 176 88'/%3E%3Cpath d='M104 12 C 128 40 164 32 188 58'/%3E%3Cpath d='M176 88 C 204 72 238 80 268 42'/%3E%3Cpath d='M176 88 C 198 128 188 176 228 214'/%3E%3Cpath d='M58 128 C 22 140 -4 176 8 214'/%3E%3Cpath d='M104 12 C 88 48 112 72 98 104'/%3E%3Cpath d='M228 214 C 248 236 242 262 268 272'/%3E%3Cpath d='M8 214 C 40 232 72 220 96 248'/%3E%3Cpath d='M188 58 C 210 44 236 52 252 28'/%3E%3C/g%3E%3Cg fill='rgb(120 220 200 / 22%25)'%3E%3Ccircle cx='58' cy='128' r='2.8'/%3E%3Ccircle cx='104' cy='12' r='2.2'/%3E%3Ccircle cx='176' cy='88' r='2.8'/%3E%3Ccircle cx='8' cy='268' r='2.2'/%3E%3Ccircle cx='268' cy='42' r='2.2'/%3E%3Ccircle cx='228' cy='214' r='2.4'/%3E%3Ccircle cx='188' cy='58' r='2'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* A low-opacity mycelium / paper-trail texture: fungal network and paper
@@ -22,7 +22,7 @@
 .dossier-veins {
   background-image: var(--dossier-veins);
   background-repeat: repeat;
-  background-size: 240px 240px;
+  background-size: 280px 280px;
 }
 
 /* The recurring "case file" heading treatment used by PageLayout.astro for
@@ -35,6 +35,19 @@
   padding-block-end: var(--at-spacing-md);
   margin-block-end: var(--at-spacing-lg);
   border-bottom: 3px double var(--at-border);
+}
+
+.dossier-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
 }
 
 .dossier-header h1 {
@@ -53,7 +66,7 @@
   padding: var(--at-spacing-lg);
   margin-block-end: var(--at-spacing-lg);
   border: 2px solid var(--at-border);
-  border-radius: var(--at-border-radius);
+  border-radius: 0;
   background-color: var(--at-bg-alt);
   background-image: var(--dossier-veins);
   background-size: 160px 160px;
@@ -83,4 +96,349 @@
   inset: -0.05em -0.2em;
   background: var(--at-text);
   border-radius: 2px;
+}
+
+/* Numbered series index — FRUS / NSA cable list, not a CardGrid. */
+.dossier-index {
+  display: flex;
+  flex-direction: column;
+  margin: var(--at-spacing-xl) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 3px double var(--at-border);
+}
+
+.dossier-index__row {
+  border-bottom: 1px solid var(--at-border);
+}
+
+.dossier-index__link {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: var(--at-spacing-sm) var(--at-spacing-md);
+  align-items: start;
+  padding-block: var(--at-spacing-md);
+  color: inherit;
+  text-decoration: none;
+}
+
+.dossier-index__link:hover,
+.dossier-index__link:focus-visible {
+  background: var(--at-bg-alt);
+}
+
+.dossier-index__no {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--at-text-secondary);
+  padding-top: 0.35em;
+}
+
+.dossier-index__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dossier-index__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--at-spacing-sm);
+}
+
+.dossier-index__title {
+  margin: 0;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: var(--at-font-size-lg);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--at-heading);
+}
+
+.dossier-index__title .at-heading-anchor {
+  display: none;
+}
+
+.dossier-index__meta {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+}
+
+.dossier-index__field {
+  margin: 0;
+  font-size: var(--at-font-size-sm);
+  color: var(--at-text-secondary);
+  max-width: 42rem;
+}
+
+.dossier-index__field strong {
+  font-family: var(--at-font-mono);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--at-text-muted);
+  margin-inline-end: 0.45em;
+}
+
+.dossier-index__link:hover .dossier-index__title,
+.dossier-index__link:focus-visible .dossier-index__title {
+  color: var(--at-primary);
+}
+
+/* Cable header on a single dispatch / briefing / return. */
+.cable-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--at-spacing-sm);
+  margin-block-end: var(--at-spacing-xl);
+  padding-block-end: var(--at-spacing-lg);
+  border-bottom: 3px double var(--at-border);
+}
+
+.cable-header__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--at-spacing-sm) var(--at-spacing-md);
+}
+
+.cable-header__series {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+}
+
+.cable-header dl {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+
+.cable-header dt {
+  margin: 0;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--at-text-muted);
+}
+
+.cable-header dd {
+  margin: 0;
+  color: var(--at-text-secondary);
+}
+
+/* Cabinet-style photographic plate: image as the subject, caption as content. */
+.soil-plate {
+  margin: var(--at-spacing-xl) 0;
+}
+
+.soil-plate__frame {
+  margin: 0;
+  border: 1px solid var(--at-border);
+  background: var(--at-bg-alt);
+  padding: var(--at-spacing-xs);
+}
+
+.soil-plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+}
+
+.soil-plate figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 40rem;
+  padding: var(--at-spacing-sm) var(--at-spacing-xs) 0;
+}
+
+.soil-plate__caption {
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: var(--at-font-size-sm);
+  color: var(--at-text);
+}
+
+.soil-plate__credit {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--at-text-muted);
+}
+
+/* Personnel files on /people/ — object files, not staff cards. */
+.personnel-index {
+  display: flex;
+  flex-direction: column;
+  gap: var(--at-spacing-xl);
+  margin-block-start: var(--at-spacing-xl);
+}
+
+.personnel-file {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: var(--at-spacing-lg);
+  padding-block: var(--at-spacing-lg);
+  border-top: 3px double var(--at-border);
+}
+
+.personnel-file .redacted-photo {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.personnel-file h2 {
+  margin: 0 0 0.4rem;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+}
+
+.personnel-file h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.personnel-file h2 a:hover,
+.personnel-file h2 a:focus-visible {
+  color: var(--at-primary);
+}
+
+.personnel-file__role {
+  margin: 0 0 0.75rem;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+}
+
+.personnel-file__brief {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--at-text-secondary);
+}
+
+/* Emergence-style editorial blocks: one idea, a lot of air, captions as content. */
+.folio-statement {
+  padding-block: clamp(4rem, 12vw, 8.5rem);
+  max-width: 34rem;
+  scroll-margin-top: calc(var(--at-nav-height, 5.5rem) + 1rem);
+}
+
+.folio-kicker {
+  margin: 0 0 1.25rem;
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--at-text-secondary);
+}
+
+.folio-lede {
+  margin: 0 0 1.5rem;
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: clamp(2.15rem, 5.4vw, 4.25rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--at-heading);
+  text-wrap: balance;
+}
+
+.folio-statement p:last-child {
+  margin: 0;
+  color: var(--at-text-secondary);
+  max-width: 36em;
+}
+
+.folio-bleed {
+  margin: 0;
+  padding: 0;
+}
+
+.folio-bleed img {
+  display: block;
+  width: 100%;
+  height: min(92svh, 52rem);
+  object-fit: cover;
+  object-position: center;
+}
+
+.folio-bleed figcaption,
+.folio-object figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-width: 36rem;
+  padding: var(--at-spacing-md) var(--at-gutter, 1.5rem) 0;
+}
+
+.folio-bleed figcaption {
+  margin-inline: auto;
+  padding-inline: 0;
+  max-width: var(--at-content-width, 42rem);
+  padding-block-start: var(--at-spacing-lg);
+}
+
+.folio-bleed__caption {
+  font-family: var(--myco-font-display, ui-serif, Georgia, serif);
+  font-size: var(--at-font-size-md);
+  color: var(--at-text);
+}
+
+.folio-bleed__credit {
+  font-family: var(--at-font-mono);
+  font-size: var(--at-font-size-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--at-text-muted);
+}
+
+.folio-object {
+  margin: clamp(3rem, 8vw, 6rem) 0;
+  padding: 0;
+}
+
+.folio-object img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 40rem) {
+  .dossier-index__link {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+  }
+
+  .personnel-file {
+    grid-template-columns: 1fr;
+  }
+
+  .personnel-file .redacted-photo {
+    max-width: 10rem;
+  }
+
+  .cable-header dl {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
 }

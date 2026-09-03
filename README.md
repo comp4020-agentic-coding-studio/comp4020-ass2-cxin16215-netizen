@@ -68,7 +68,7 @@ prints is a 404.
   `lectures` and `people`, validated against the schemas in
   `src/content.config.ts`. The small placeholder set is a working example;
   replace it incrementally and keep the checks green.
-- `src/course-config.ts` --- the validated course record: SLOP code, title,
+- `src/course-config.ts` --- the validated course record: BIOG code, title,
   description, tags, level, session and dates. The home page, navigation and
   JSON API all read it.
 - `src/site-config.ts` --- site name, navigation, licence, and the Slop
@@ -122,7 +122,7 @@ build fails on a ref that doesn't resolve**, which is the point: a dangling link
 is caught before it ships, not after.
 
 `src/course-config.ts` is the single source for the course record. Its strict
-schema validates the `SLOPxxxx` code and level, title, 80--300 character
+schema validates the `BIOGxxxx` code and level, title, 80--300 character
 description, one to three tags, session label, year and teaching period. It
 feeds the home page, navigation and `/api/index.json`, so do not restate those
 facts. Change the record's dates alongside the placeholder sessions, lectures
@@ -216,7 +216,7 @@ Every build emits a versioned `dist/api/index.json` and per-entry JSON. This is
 platform plumbing rather than an API-design exercise. The future SlopU programs
 and courses page will use the course record and content nodes to filter and
 display published courses, including their canonical
-`courses.slop.university/SLOPxxxx/` path. The integration emits and validates
+`courses.slop.university/BIOGxxxx/` path. The integration emits and validates
 this contract during the build; do not hand-edit generated JSON.
 
 See the course site for how the checks map to each week of the course.

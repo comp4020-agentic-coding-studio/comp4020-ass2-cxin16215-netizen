@@ -4,13 +4,14 @@ import { getPublishedCollection } from "astro-course-university/content";
 import RelatedContent from "astro-course-university/components/RelatedContent.astro";
 import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
-import Stamp from "../../components/Stamp.astro";
+import CableHeader from "../../components/CableHeader.astro";
+import HabitatOpener from "../../components/HabitatOpener.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
-import WeekGlyph from "../../components/WeekGlyph.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
 import "../../styles/mycelium.css";
+import "../../styles/habitats.css";
 
 export async function getStaticPaths() {
   const sessions = await getPublishedCollection("sessions");
@@ -26,11 +27,16 @@ const { Content } = await render(session);
   description={session.data.description}
   {...siteConfig}
 >
-  <p>
-    <WeekGlyph week={session.data.week} class="week-glyph event-glyph" />
-    <Stamp label={`Case file ${String(session.data.week).padStart(2, "0")}`} />
-    <strong>{formatCourseDate(session.data.date)}</strong>
-  </p>
+  <HabitatOpener kind="briefings" compact week={session.data.week} />
+  <CableHeader
+    series="Case file"
+    fileNo={String(session.data.week).padStart(2, "0")}
+    stamp={`Case file ${String(session.data.week).padStart(2, "0")}`}
+    week={session.data.week}
+    date={formatCourseDate(session.data.date)}
+    metaphor={String(session.data.metaphor ?? "")}
+    phenomenon={String(session.data.phenomenon ?? "")}
+  />
   <Content />
   <SpecList spec={session.data.spec}>
     What you bring to the session. Written so a reader can tell whether it has

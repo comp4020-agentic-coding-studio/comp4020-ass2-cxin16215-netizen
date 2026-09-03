@@ -4,13 +4,14 @@ import { getPublishedCollection } from "astro-course-university/content";
 import RelatedContent from "astro-course-university/components/RelatedContent.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import { withBase } from "astro-theme-university/url";
-import Stamp from "../../components/Stamp.astro";
+import CableHeader from "../../components/CableHeader.astro";
+import HabitatOpener from "../../components/HabitatOpener.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
-import WeekGlyph from "../../components/WeekGlyph.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, siteConfig } from "../../site-config";
 import "../../styles/dossier.css";
 import "../../styles/mycelium.css";
+import "../../styles/habitats.css";
 
 export async function getStaticPaths() {
   const lectures = await getPublishedCollection("lectures");
@@ -23,11 +24,16 @@ const title = `Week ${lecture.data.week}: ${lecture.data.title}`;
 ---
 
 <ContentLayout title={title} description={lecture.data.description} {...siteConfig}>
-  <p>
-    <WeekGlyph week={lecture.data.week} class="week-glyph event-glyph" />
-    <Stamp label={`Dispatch ${String(lecture.data.week).padStart(2, "0")}`} />
-    <strong>{formatCourseDate(lecture.data.date)}</strong>
-  </p>
+  <HabitatOpener kind="dispatches" compact week={lecture.data.week} />
+  <CableHeader
+    series="Dispatch"
+    fileNo={String(lecture.data.week).padStart(2, "0")}
+    stamp={`Dispatch ${String(lecture.data.week).padStart(2, "0")}`}
+    week={lecture.data.week}
+    date={formatCourseDate(lecture.data.date)}
+    metaphor={String(lecture.data.metaphor ?? "")}
+    phenomenon={String(lecture.data.phenomenon ?? "")}
+  />
   {lecture.data.slides && <p><a href={withBase(lecture.data.slides)}>Open the slides</a></p>}
   <Content />
   <TeachingTeam teachers={lecture.data.teachers} />

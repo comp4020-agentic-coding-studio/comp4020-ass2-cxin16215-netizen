@@ -3,7 +3,7 @@
 ## What I built
 
 "Underground Diplomacy: Trade, Espionage and Betrayal in the Mycorrhizal
-Network" (`SLOP6674`) — a twelve-week postgraduate seminar that reframes
+Network" (`BIOG6127`) — a twelve-week postgraduate seminar that reframes
 forest fungal (mycorrhizal) networks as a diplomatic system, on the fixed
 Slop University template. Every week pairs a diplomatic term with a real,
 citable phenomenon in mycorrhizal biology, and several weeks (1, 3, 8, 9, 12

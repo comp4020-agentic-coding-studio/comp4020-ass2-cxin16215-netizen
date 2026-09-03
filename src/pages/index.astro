@@ -1,21 +1,20 @@
 ---
+import { Image } from "astro:assets";
 import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
-import Card from "astro-theme-university/components/Card.astro";
-import CardGrid from "astro-theme-university/components/CardGrid.astro";
+import DossierIndex from "../components/DossierIndex.astro";
 import FaunaSymbols from "../components/FaunaSymbols.astro";
-import MyceliumHero from "../components/MyceliumHero.astro";
 import MyceliumMap from "../components/MyceliumMap.astro";
-import Stamp from "../components/Stamp.astro";
-import { courseMeta } from "../course-config";
+import OpenField from "../components/OpenField.astro";
+import { courseFileNo, courseMeta } from "../course-config";
 import { sessionLabels, siteConfig } from "../site-config";
+import boleteEdulis from "../decks/assets/ecm-boletus-edulis-krisp.jpg";
+import pineEcm from "../decks/assets/ecm-lactarius-pinus.jpg";
 import "../styles/dossier.css";
 import "../styles/mycelium.css";
 
-// A real hero, not ContentLayout's plain-<h1> fallback — this page calls
-// BaseLayout directly so MyceliumHero can occupy the theme's own "hero"
-// slot with hand-authored SVG rather than a photograph (see CLAUDE.md:
-// "no glowing CGI, no stock moss hero" is about generic cliché, not about
-// bioluminescence built from this course's own node/trunk system).
+const colon = courseMeta.title.indexOf(":");
+const displayTitle = colon > 0 ? courseMeta.title.slice(0, colon) : courseMeta.title;
+const displayDeck = colon > 0 ? courseMeta.title.slice(colon + 1).trim() : courseMeta.description;
 ---
 
 <BaseLayout
@@ -25,67 +24,104 @@ import "../styles/mycelium.css";
 >
   <FaunaSymbols />
 
-  <MyceliumHero
+  <OpenField
     slot="hero"
+    src={boleteEdulis}
+    alt="Two Boletus edulis fruiting bodies on oak leaf litter, one fallen to show the pore surface."
     code={courseMeta.code}
-    title={courseMeta.title}
-    tagline={courseMeta.description}
-    mapAnchorId="mycelium-map"
+    title={displayTitle}
+    deck={displayDeck}
+    credit="Holger Krisp · CC BY 3.0 · Wikimedia Commons"
+    continueHref="#the-brief"
   />
 
-  <p><Stamp label="Case file 6674" rotate={-2} /></p>
+  <section class="folio-statement" id="the-brief">
+    <p class="folio-kicker">Case file {courseFileNo} · {courseMeta.session} {courseMeta.year}</p>
+    <p class="folio-lede">Read the forest floor as a diplomatic archive.</p>
+    <p>
+      Each week takes one term from statecraft — trade, aid, espionage, sanctions,
+      treaty and betrayal — and holds it against a real, citable phenomenon in
+      mycorrhizal biology, until the metaphor either earns its keep or breaks.
+      You leave having filed a Field Dispatch on a fungal double-cross and
+      argued, in the Peace Conference, where the diplomacy framing helped you
+      think and where it quietly lied to you.
+    </p>
+  </section>
 
-  <ul class="course-tags" aria-label="Course tags">
-    {courseMeta.tags.map((tag) => <li>{tag}</li>)}
-  </ul>
+  <section class="hypha-run" id="the-organism" aria-labelledby="the-organism-title">
+    <p class="folio-kicker">The organism</p>
+    <p class="folio-lede" id="the-organism-title">Twelve weeks, one trunk.</p>
+    <p class="hypha-run__deck">
+      Follow the hypha from Credentials to the Peace Conference. Each fruiting
+      body is a week; the trunk is the argument the course is growing, not a
+      timetable laid on its side.
+    </p>
+    <MyceliumMap />
+  </section>
 
-  <p class="map-intro">
-    Twelve weeks, one organism. Follow the trunk from Week 1 to the Peace
-    Conference, or jump straight to a week's fruiting body below.
-  </p>
+  <figure class="folio-bleed">
+    <Image
+      src={pineEcm}
+      alt="Forked, swollen pine root tips sheathed by Lactarius deliciosus ectomycorrhizae."
+      widths={[768, 1536, 2560]}
+      sizes="100vw"
+    />
+    <figcaption>
+      <span class="folio-bleed__caption">
+        Lactarius on pine: a mantle you can see, a Hartig net you have to
+        section for. Proximity in a photograph is not a credential.
+      </span>
+      <span class="folio-bleed__credit">Marc-André Selosse · CC0 · Wikimedia Commons</span>
+    </figcaption>
+  </figure>
 
-  <MyceliumMap />
+  <section class="folio-statement">
+    <p class="folio-kicker">Who it is for</p>
+    <p class="folio-lede">A first course in ecology is enough. Political science is not assumed.</p>
+    <p>
+      The diplomatic vocabulary is a lens the course hands you, not a
+      prerequisite. You should already be comfortable reading a primary paper;
+      you will read several.
+    </p>
+  </section>
 
-  <h2>What you will do</h2>
-  <p>
-    Read the forest floor as a diplomatic archive. Each week takes one term
-    from statecraft — trade, aid, espionage, sanctions, treaty and betrayal —
-    and holds it against a real, citable phenomenon in mycorrhizal biology,
-    until the metaphor either earns its keep or breaks. You leave having
-    filed a Field Dispatch on a fungal double-cross and argued, in the Peace
-    Conference, where the diplomacy framing helped you think and where it
-    quietly lied to you.
-  </p>
-
-  <h2>Who it is for</h2>
-  <p>
-    Anyone with a first course in ecology or plant biology who wants to
-    practice reading a system for its relationships rather than its parts
-    list. No political science background is assumed — the diplomatic
-    vocabulary is a lens the course hands you, not a prerequisite. You should
-    already be comfortable reading a primary paper; you will read several.
-  </p>
-
-  <h2>Where to go next</h2>
-  <CardGrid columns={2}>
-    <Card title={sessionLabels.plural} href="/sessions/">
-      <p>The weekly schedule and what happens in each teaching session.</p>
-    </Card>
-    <Card title="Assessment" href="/assessments/">
-      <p>What is marked, what it is worth, and when it is due.</p>
-    </Card>
-    <Card title="People" href="/people/">
-      <p>Who teaches the course and how to reach them.</p>
-    </Card>
-  </CardGrid>
+  <h2 id="on-file">On file</h2>
+  <DossierIndex
+    labelledBy="on-file"
+    items={[
+      {
+        href: "/sessions/",
+        index: "01",
+        title: sessionLabels.plural,
+        caption: "The twelve-week teaching schedule: what happens in each field window, and what leaves the room.",
+        captionLabel: "",
+      },
+      {
+        href: "/lectures/",
+        index: "02",
+        title: "Dispatches",
+        caption: "What is covered, week by week, and which topics each lecture draws on.",
+        captionLabel: "",
+      },
+      {
+        href: "/assessments/",
+        index: "03",
+        title: "Returns",
+        caption: "What is marked, what it is worth, and when it is due.",
+        captionLabel: "",
+      },
+      {
+        href: "/people/",
+        index: "04",
+        title: "Personnel",
+        caption: "Who teaches the course and how to reach them.",
+        captionLabel: "",
+      },
+    ]}
+  />
 </BaseLayout>
 
 <script>
-  // Drives --myco-scroll-px (read by mycelium.css's fog/spore layers and by
-  // MyceliumHero's own parallax) so the atmosphere visibly deepens as you
-  // descend from the hero into the map, rather than sitting static behind a
-  // page that just happens to scroll. rAF-throttled; skipped entirely under
-  // reduced motion, same gating MyceliumMap already applies to its pulses.
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   let ticking = false;
 
@@ -107,26 +143,20 @@ import "../styles/mycelium.css";
 </script>
 
 <style>
-  .course-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-block: 0 2rem;
-    padding: 0;
-    list-style: none;
+  .hypha-run {
+    padding-block-start: clamp(4rem, 12vw, 8rem);
+    scroll-margin-top: calc(var(--at-nav-height, 5.5rem) + 1rem);
   }
 
-  .course-tags li {
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
-    color: var(--at-text-secondary);
-    background: var(--at-bg-alt);
-    font-size: 0.9rem;
+  .hypha-run .folio-kicker,
+  .hypha-run .folio-lede,
+  .hypha-run__deck {
+    margin-inline: max(var(--at-gutter, 1.5rem), calc((100vw - 42rem) / 2));
   }
 
-  .map-intro {
+  .hypha-run__deck {
+    max-width: 36rem;
+    margin-block: 0 var(--at-spacing-xl);
     color: var(--at-text-secondary);
-    font-size: var(--at-font-size-sm);
-    max-width: 34rem;
   }
 </style>

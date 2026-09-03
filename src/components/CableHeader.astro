@@ -1,0 +1,53 @@
+---
+import Stamp from "./Stamp.astro";
+import WeekGlyph from "./WeekGlyph.astro";
+
+interface Props {
+  series: string;
+  fileNo: string;
+  stamp: string;
+  date?: string;
+  week?: number;
+  metaphor?: string;
+  phenomenon?: string;
+  extra?: { term: string; value: string }[];
+}
+
+const { series, fileNo, stamp, date, week, metaphor, phenomenon, extra = [] } = Astro.props;
+---
+
+<header class="cable-header">
+  <div class="cable-header__top">
+    {week != null && <WeekGlyph week={week} class="week-glyph event-glyph" />}
+    <p class="cable-header__series">{series} {fileNo}</p>
+    <Stamp label={stamp} />
+  </div>
+  <dl>
+    {date && (
+      <>
+        <dt>Date</dt>
+        <dd>{date}</dd>
+      </>
+    )}
+    {
+      extra.map((row) => (
+        <>
+          <dt>{row.term}</dt>
+          <dd>{row.value}</dd>
+        </>
+      ))
+    }
+    {metaphor && (
+      <>
+        <dt>Metaphor</dt>
+        <dd>{metaphor}</dd>
+      </>
+    )}
+    {phenomenon && (
+      <>
+        <dt>Phenomenon</dt>
+        <dd>{phenomenon}</dd>
+      </>
+    )}
+  </dl>
+</header>

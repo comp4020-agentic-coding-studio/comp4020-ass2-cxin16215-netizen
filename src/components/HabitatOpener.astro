@@ -1,0 +1,174 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { getPublishedCollection } from "astro-course-university/content";
+import { courseFileNo, courseMeta } from "../course-config";
+import type { Habitat } from "../lib/habitat";
+import diorama from "../decks/assets/boletus-satanas-diorama.jpg";
+import stainedRoot from "../decks/assets/amf-stained-root.jpg";
+import lactarius from "../decks/assets/ecm-lactarius-pinus.jpg";
+
+interface Props {
+  kind: Habitat;
+  compact?: boolean;
+  week?: number;
+  kicker?: string;
+  title?: string;
+  deck?: string;
+}
+
+const { kind, compact = false, week, kicker, title, deck } = Astro.props;
+
+const plates: Partial<Record<Habitat, { src: ImageMetadata; alt: string; credit: string }>> = {
+  dispatches: {
+    src: diorama,
+    alt: "Museum cutaway of devil's bolete on beech litter: fruiting bodies above the soil, mycelium running down through the roots.",
+    credit: "TB0815 · diorama S. Brandt, NHM Basel · CC BY 4.0",
+  },
+  briefings: {
+    src: stainedRoot,
+    alt: "Stained arbuscular mycorrhizal structures inside a plant root, with a 50 micrometre scale bar.",
+    credit: "Rajarshi Rit · CC BY 4.0 · Wikimedia Commons",
+  },
+  returns: {
+    src: lactarius,
+    alt: "Forked, swollen pine root tips sheathed by Lactarius deliciosus ectomycorrhizae.",
+    credit: "Marc-André Selosse · CC0 · Wikimedia Commons",
+  },
+};
+
+const words: Record<Habitat, string> = {
+  dispatches: "Dispatches",
+  briefings: "Briefings",
+  returns: "Returns",
+  personnel: "Personnel",
+  orders: "Orders",
+  lost: "Lost",
+};
+
+const kickers: Record<Habitat, string> = {
+  dispatches: "Spore print",
+  briefings: "Soil profile",
+  returns: "Fruiting bodies",
+  personnel: "Herbarium",
+  orders: "Hymenium",
+  lost: "Broken hypha",
+};
+
+const ghosts: Record<Habitat, string> = {
+  dispatches: "12",
+  briefings: "12",
+  returns: "02",
+  personnel: "02",
+  orders: "§",
+  lost: "404",
+};
+
+const roleLabels: Record<string, string> = {
+  convenor: "Convenor",
+  tutor: "Tutor",
+  guest: "Guest",
+  other: "On file",
+};
+
+const roster =
+  kind === "personnel"
+    ? (await getPublishedCollection("people")).map((person, i) => ({
+        acc: `${courseFileNo}.${String(i + 1).padStart(2, "0")}`,
+        name: person.data.title.replace(/^Dr\.?\s+/i, ""),
+        role: roleLabels[person.data.role ?? "other"] ?? "On file",
+      }))
+    : [];
+
+const standingOrders = [
+  { n: "01", title: "Late" },
+  { n: "02", title: "Extensions" },
+  { n: "03", title: "Integrity" },
+  { n: "04", title: "Help" },
+];
+
+const gillAngles = Array.from({ length: 84 }, (_, i) => -78 + (i * 156) / 83);
+
+const plate = plates[kind];
+const word = title ?? words[kind];
+const ghost = week != null ? String(week).padStart(2, "0") : ghosts[kind];
+---
+
+<header class:list={["poster", `poster--${kind}`, compact && "poster--compact"]}>
+  {
+    plate && (
+      <div class="poster__plate">
+        <Image src={plate.src} alt={plate.alt} widths={[768, 1536, 2400]} sizes="100vw" />
+      </div>
+    )
+  }
+  {
+    kind === "personnel" && (
+      <div class="poster-field poster-field--personnel" aria-hidden="true">
+        <p class="herb-ledger">
+          Sheet 02 · Locus forest floor · Det. pending · Clearance teaching · Acc. {courseMeta.code} · Not mounted
+        </p>
+        <ul class="herb-wall">
+          {roster.map((entry) => (
+            <li>{entry.name}</li>
+          ))}
+        </ul>
+        <div class="herb-mounts">
+          {roster.map((entry) => (
+            <div class="herb-mount">
+              <span class="herb-mount__acc">{entry.acc}</span>
+              <span class="herb-mount__void">Specimen not mounted</span>
+              <span class="herb-mount__role">{entry.role}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  {
+    kind === "orders" && (
+      <div class="poster-field poster-field--orders" aria-hidden="true">
+        <svg class="hymenium" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice">
+          {gillAngles.map((angle) => {
+            const rad = (angle * Math.PI) / 180;
+            return (
+              <line
+                x1="18"
+                y1="46"
+                x2={18 + 220 * Math.cos(rad)}
+                y2={46 + 220 * Math.sin(rad)}
+              />
+            );
+          })}
+          <circle cx="18" cy="46" r="7.2" />
+        </svg>
+        <ol class="order-wall">
+          {standingOrders.map((item) => (
+            <li>
+              <span>§{item.n}</span>
+              {item.title}
+            </li>
+          ))}
+        </ol>
+      </div>
+    )
+  }
+  <div class="poster__marks" aria-hidden="true">
+    <span class="poster__mark poster__mark--tl"></span>
+    <span class="poster__mark poster__mark--tr"></span>
+    <span class="poster__mark poster__mark--bl"></span>
+    <span class="poster__mark poster__mark--br"></span>
+  </div>
+  <p class="poster__spine" aria-hidden="true">{courseMeta.code}</p>
+  <p class="poster__ghost" aria-hidden="true">{ghost}</p>
+  {
+    !compact && (
+      <div class="poster__copy">
+        <p class="poster__kicker">{kicker ?? kickers[kind]}</p>
+        <h1 class="poster__word">{word}</h1>
+        {deck && <p class="poster__deck">{deck}</p>}
+      </div>
+    )
+  }
+  {plate && <p class="poster__credit">{plate.credit}</p>}
+</header>
