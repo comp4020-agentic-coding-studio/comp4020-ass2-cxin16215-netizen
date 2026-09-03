@@ -6,6 +6,7 @@ import SpecList from "astro-course-university/components/SpecList.astro";
 import ContentLayout from "astro-theme-university/layouts/ContentLayout.astro";
 import CableHeader from "../../components/CableHeader.astro";
 import HabitatOpener from "../../components/HabitatOpener.astro";
+import IdleCache from "../../components/IdleCache.astro";
 import TeachingTeam from "../../components/TeachingTeam.astro";
 import { formatCourseDate } from "../../lib/dates";
 import { graphCollections, sessionLabels, siteConfig } from "../../site-config";
@@ -43,5 +44,6 @@ const { Content } = await render(session);
     been met without asking you.
   </SpecList>
   <TeachingTeam teachers={session.data.teachers} />
+  <IdleCache />
   <RelatedContent entry={session} collections={graphCollections} />
 </ContentLayout>

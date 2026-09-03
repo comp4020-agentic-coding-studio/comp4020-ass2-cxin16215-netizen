@@ -26,11 +26,21 @@ const plates: Record<string, { src: ImageMetadata; alt: string; credit: string }
 
 <div class="harvest-index">
   {
-    visible.map((assessment) => {
+    visible.map((assessment, i) => {
       const plate = plates[assessment.id];
       return (
         <a class="harvest-plate" href={withBase(`/assessments/${assessment.id}/`)}>
-          {plate && <Image src={plate.src} alt={plate.alt} widths={[768, 1536, 2400]} sizes="100vw" />}
+          {plate && (
+            <Image
+              src={plate.src}
+              alt={plate.alt}
+              widths={[768, 1536, 2400]}
+              sizes="100vw"
+              quality={78}
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchpriority={i === 0 ? "high" : undefined}
+            />
+          )}
           <span class="harvest-plate__weight">{assessment.data.weight}%</span>
           <div class="harvest-plate__body">
             <h2 class="harvest-plate__title">{assessment.data.title}</h2>

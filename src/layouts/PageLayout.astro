@@ -1,6 +1,7 @@
 ---
 import MdxPageLayout from "astro-theme-university/layouts/MdxPageLayout.astro";
 import HabitatOpener from "../components/HabitatOpener.astro";
+import IdleCache from "../components/IdleCache.astro";
 import { habitatFromPath } from "../lib/habitat";
 import { siteConfig } from "../site-config";
 import "../styles/dossier.css";
@@ -17,4 +18,5 @@ const kind = habitatFromPath(Astro.url.pathname);
 <MdxPageLayout siteConfig={siteConfig} {...Astro.props} lead={false}>
   <HabitatOpener kind={kind} deck={props.description} />
   <slot />
+  <IdleCache />
 </MdxPageLayout>

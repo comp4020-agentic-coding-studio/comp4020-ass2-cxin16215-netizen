@@ -98,7 +98,15 @@ const ghost = week != null ? String(week).padStart(2, "0") : ghosts[kind];
   {
     plate && (
       <div class="poster__plate">
-        <Image src={plate.src} alt={plate.alt} widths={[768, 1536, 2400]} sizes="100vw" />
+        <Image
+          src={plate.src}
+          alt={plate.alt}
+          widths={compact ? [640, 1024, 1600] : [768, 1536, 2400]}
+          sizes="100vw"
+          quality={compact ? 70 : 78}
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
     )
   }

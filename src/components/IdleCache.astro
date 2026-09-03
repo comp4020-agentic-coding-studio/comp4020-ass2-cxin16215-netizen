@@ -1,0 +1,62 @@
+---
+import { getImage } from "astro:assets";
+import diorama from "../decks/assets/boletus-satanas-diorama.jpg";
+import stainedRoot from "../decks/assets/amf-stained-root.jpg";
+import lactarius from "../decks/assets/ecm-lactarius-pinus.jpg";
+
+// Every interior page in the dossier opens on one of three plates: a Briefing
+// on the stained root, a Dispatch on the diorama, a Return on the pine tips.
+// That is the whole set, so warming it covers all twelve weeks, all twelve
+// lectures and both assessments in three requests — no guess about which link
+// the reader takes, because every link lands on one of these three.
+//
+// These options must stay identical to HabitatOpener's compact branch. Astro
+// hashes the transform into the filename, so a quality or width that drifts
+// apart here caches a file the next page never asks for.
+const plates = await Promise.all(
+  [stainedRoot, diorama, lactarius].map((src) =>
+    getImage({ src, widths: [640, 1024, 1600], sizes: "100vw", quality: 70 }),
+  ),
+);
+
+const warm = plates.map((plate) => plate.srcSet.attribute);
+---
+
+<script is:inline define:vars={{ warm }}>
+  (() => {
+    // Someone on a metered connection did not ask for three photographs of a
+    // page they have not opened.
+    const link = navigator.connection;
+    if (link && (link.saveData || /(^|-)2g$/.test(link.effectiveType ?? ""))) return;
+    if (window.matchMedia("(prefers-reduced-data: reduce)").matches) return;
+
+    const whenIdle = window.requestIdleCallback ?? ((fn) => window.setTimeout(fn, 1500));
+
+    whenIdle(() => {
+      for (const srcset of warm) {
+        const img = new Image();
+        // sizes before srcset: the candidate is chosen when srcset is assigned,
+        // and with no sizes the browser would resolve against a 100vw default
+        // it has no layout for.
+        img.sizes = "100vw";
+        img.srcset = srcset;
+      }
+
+      // Then the documents themselves, so the click has nothing left to fetch.
+      whenIdle(() => {
+        const here = new URL(location.href);
+        const seen = new Set([here.pathname]);
+        for (const anchor of document.querySelectorAll("a[href]")) {
+          if (seen.size > 12) break;
+          const url = new URL(anchor.href, here);
+          if (url.origin !== here.origin || seen.has(url.pathname)) continue;
+          seen.add(url.pathname);
+          const tag = document.createElement("link");
+          tag.rel = "prefetch";
+          tag.href = url.pathname;
+          document.head.append(tag);
+        }
+      });
+    });
+  })();
+</script>

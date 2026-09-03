@@ -3,6 +3,7 @@ import { Image } from "astro:assets";
 import BaseLayout from "astro-theme-university/layouts/BaseLayout.astro";
 import DossierIndex from "../components/DossierIndex.astro";
 import FaunaSymbols from "../components/FaunaSymbols.astro";
+import IdleCache from "../components/IdleCache.astro";
 import MyceliumMap from "../components/MyceliumMap.astro";
 import OpenField from "../components/OpenField.astro";
 import { courseFileNo, courseMeta } from "../course-config";
@@ -23,6 +24,7 @@ const displayDeck = colon > 0 ? courseMeta.title.slice(colon + 1).trim() : cours
   {...siteConfig}
 >
   <FaunaSymbols />
+  <IdleCache />
 
   <OpenField
     slot="hero"
