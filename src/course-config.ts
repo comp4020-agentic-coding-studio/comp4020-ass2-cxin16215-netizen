@@ -4,12 +4,12 @@ import { z } from "astro/zod";
 // The level digits ANU uses: 1000--4000 undergraduate, 6000 and 8000
 // postgraduate. Both the code pattern and the level field derive from this.
 const LEVELS = [1, 2, 3, 4, 6, 8] as const;
-const allowedCode = new RegExp(`^BIOG[${LEVELS.join("")}]\\d{3}$`);
+const allowedCode = new RegExp(`^SLOP[${LEVELS.join("")}]\\d{3}$`);
 
 export const slopCourseMetaSchema = z
   .strictObject({
     code: z.string().regex(allowedCode, {
-      message: "use BIOG plus a 1000–4000, 6000 or 8000 level code",
+      message: "use SLOP plus a 1000–4000, 6000 or 8000 level code",
     }),
     title: z.string().trim().min(1).max(100),
     session: z.string().trim().min(1).max(40),
@@ -41,9 +41,11 @@ export const slopCourseMetaSchema = z
 // The single source of truth for the course record. The generated homepage,
 // navigation label and /api/index.json all read this object.
 //
-// BIOG6127: biology prefix, 6000-level seminar, twelve weeks, taught in 2027.
+// The code's last three digits (674) were assigned to this repo when it was
+// provisioned; only the level digit changed, from 1 to 6, to match a
+// postgraduate seminar this narrow.
 export const courseMeta = slopCourseMetaSchema.parse({
-  code: "BIOG6127",
+  code: "SLOP6674",
   title: "Underground Diplomacy: Trade, Espionage and Betrayal in the Mycorrhizal Network",
   session: "Semester 1",
   year: 2027,
@@ -57,5 +59,5 @@ export const courseMeta = slopCourseMetaSchema.parse({
   tags: ["mycology", "network theory", "diplomacy"],
 }) satisfies CourseMetaInput;
 
-/** Numeric file number taken from the code (BIOG6127 → 6127). */
+/** Numeric file number taken from the code (SLOP6674 → 6674). */
 export const courseFileNo = courseMeta.code.slice(4);
