@@ -318,6 +318,11 @@ body:has(.poster--returns) {
   font-size: clamp(4.4rem, 15vw, 11.5rem);
 }
 
+/* The strike over PERSONNEL. At full --at-text it was a solid slab in dark
+   mode, closer to a bar chart than to a redaction — the word disappeared
+   under it instead of being struck through. Held back to 55% it reads as ink
+   laid over letters that are still there, which is what a redaction on a
+   leaked page actually looks like. */
 .poster--personnel:not(.poster--compact) .poster__word::after {
   content: "";
   position: absolute;
@@ -325,7 +330,7 @@ body:has(.poster--returns) {
   right: -10vw;
   top: 42%;
   height: 0.22em;
-  background: var(--at-text);
+  background: color-mix(in oklch, var(--at-text) 55%, transparent);
 }
 
 .poster-field {
